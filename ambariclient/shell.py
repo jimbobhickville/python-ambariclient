@@ -13,16 +13,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-# TODO: config file with logger level, ambari host, username, password
-
 import functools
+import json
 import logging
 import os
-logging.basicConfig(level=logging.CRITICAL)
 
-from ambariclient.client import Ambari
+from ambariclient.client import Ambari, ENTRY_POINTS
 from ambariclient import events, base, models, utils
 
+# TODO: override the logger level somehow
+logging.basicConfig(level=logging.CRITICAL)
 LOG = logging.getLogger(__name__)
 
 
@@ -62,7 +62,38 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     events.subscribe(models.Bootstrap, 'wait', bootstrap_progress, events.states.PROGRESS)
     events.subscribe(models.Bootstrap, 'wait', bootstrap_done, events.states.FINISHED)
 
-    ambari = Ambari('c6401.ambari.apache.org', port=8080, username='admin', password='admin')
+    config = {
+        "host": "c6401.ambari.apache.org",
+        "port": 8080,
+        "username": "admin",
+        "password": "admin"
+    }
+
+    config_path = os.path.expanduser('~/.ambari')
+    if os.path.isfile(config_path):
+        with open(config_path, 'r') as config_file:
+            config.update(json.load(config_file))
+
+    ambari = Ambari(**config)
+
+    def dump_hierarchy(model_class=None, stack=None):
+        if stack is None:
+            stack = ['ambari']
+
+        if model_class:
+            relationships = model_class.relationships
+        else:
+            relationships = ENTRY_POINTS
+
+        for rel in sorted(relationships.keys()):
+            new_stack = list(stack)
+            new_stack.append(rel)
+            print '.'.join(new_stack)
+            rel_model_class = relationships[rel]
+            new_stack[-1] = "%s(%s)" % (new_stack[-1], rel_model_class.primary_key)
+            print '.'.join(new_stack)
+            dump_hierarchy(model_class=rel_model_class, stack=new_stack)
+
 
     print "\nAmbari client available as 'ambari'"
     print " - Ambari Server is %s" % ambari.host
