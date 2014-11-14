@@ -14,11 +14,48 @@ The starting point for users is the Ambari class in ambariclient.client
     >>> from ambariclient.client import Ambari
     >>> client = Ambari('c6401.ambari.apache.org', port=8080, username='admin', password='admin')
 
+
+Ambari Shell
+-----------
+
+The Ambari Shell will automatically set up the ambari client for you and let you
+play around with the API to learn the syntax.  To load it run the exectuable in
+bin:
+
+    $ bin/ambari-shell
+    Python 2.7.2 (default, Oct 11 2012, 20:14:37)
+    [GCC 4.2.1 Compatible Apple Clang 4.0 (tags/Apple/clang-418.0.60)] on darwin
+    Type "help", "copyright", "credits" or "license" for more information.
+
+    Ambari client available as 'ambari'
+     - Ambari Server is c6401.ambari.apache.org:8080
+     - Ambari Version is 1.7.0
+
+    >>>
+
+You can then just reference the 'ambari' variable as the client.  The defaults
+are those for the Ambari Quick Start setup, but you can override them by creating
+a JSON configuration file in $HOME/.ambari:
+
+    {
+        "host": "my.ambari.server.com,
+        "port": 80,
+        "username": "my-username",
+        "password": "my-password"
+    }
+
+Those will then be used to create the client connection in the shell.  This
+configuration file will also be picked up by the integration tests for knowing
+where to point the tests.
+
+Basic Examples
+-----------
+
 All of the various resources are broken down into what are known as collections.
 Each collection contains one or more models, which represent resources in the
 Ambari API.  For example, to get the usernames of all users in the system:
 
-    >>> for user in client.users:
+    >>> for user in ambari.users:
     ...     user.user_name
     ...
     u'admin'
@@ -27,15 +64,15 @@ You can get a specific model from a collection if you have the primary identifie
 for that model.  So, for a user, the user_name is the primary identifier.  To get
 the 'admin' user:
 
-    >>> user = client.users('admin')
+    >>> user = ambari.users('admin')
     >>> user.user_name
-    'admin'
+    u'admin'
 
 Each model can then, in turn, contain collections of models that are subordinate
 to it.  In the case of users, there is a relationship to what are called
 privileges:
 
-    >>> for privilege in client.users('admin').privileges:
+    >>> for privilege in ambari.users('admin').privileges:
     ...     privilege.permission_name
     ...
     u'AMBARI.ADMIN'
@@ -48,7 +85,7 @@ needed to get the permission_id instead, that information is returned by the
 GET request on the user object. I'm including the relevant debug log statements
 to show the difference:
 
-    >>> for privilege in client.users('admin').privileges:
+    >>> for privilege in ambari.users('admin').privileges:
     ...     privilege.permission_name
     ...
     DEBUG:requests.packages.urllib3.connectionpool:"GET /api/v1/users/admin HTTP/1.1" 200 416
@@ -86,14 +123,14 @@ to show the difference:
     u'AMBARI.ADMIN'
 
 Notice that two GET requests were sent to load the appropriate data.  The first
-is sent as soon as you call .privileges on client.users('admin').  Most people
-would expect it to be sent on client.users('admin') but at that point you aren't
+is sent as soon as you call .privileges on ambari.users('admin').  Most people
+would expect it to be sent on ambari.users('admin') but at that point you aren't
 attempting to access any data unknown to the object, so no API call is sent.
 Accessing a relationship requires the object to be populated as the relationship
 data is often returned in the original request, saving a separate API call later.
 Now, back to the example:
 
-    >>> for privilege in client.users('admin').privileges:
+    >>> for privilege in ambari.users('admin').privileges:
     ...     privilege.privilege_id
     ...
     DEBUG:requests.packages.urllib3.connectionpool:"GET /api/v1/users/admin HTTP/1.1" 200 416
@@ -139,7 +176,7 @@ fun things like:
 
 It's most-commonly useful after a create() call:
 
-    >>> cluster = client.clusters.create(name, blueprint=bp_name,
+    >>> cluster = ambari.clusters.create(name, blueprint=bp_name,
                                          host_groups=host_groups,
                                          default_password=pwd
                                         ).wait(timeout=1800, interval=30)
@@ -159,19 +196,81 @@ process using this library, it's pretty simple:
     >>> with open("/path/to/insecure_private_key") as f:
     ...    ssh_key = f.read()
     ...
-    >>> bootstrap = client.bootstrap.create(hosts=hosts, sshKey=ssh_key, user='vagrant')
+    >>> bootstrap = ambari.bootstrap.create(hosts=hosts, sshKey=ssh_key, user='vagrant')
     >>> bootstrap.wait()
 
 There is no way to retrieve a list of bootstrap operations, so don't lose track
 of the one you started.  This is a server-side API restriction:
 
-    >>> client.bootstrap.wait()
+    >>> ambari.bootstrap.wait()
     ambariclient.exceptions.MethodNotAllowed: HTTP request failed for GET http://c6401.ambari.apache.org:8080/api/v1/bootstrap: Method Not Allowed 405: {
       "status": 405,
       "message": "Method Not Allowed"
     }
 
-More example usage can be found in the integration tests.
+API Hierarchy
+-----------
+
+For reference, this is the currently-supported hierarchy of collections and models
+available for you to use.  This list can be regenerated by calling dump_hierarchy()
+in the ambari-shell.  We'll try to keep it up-to-date:
+
+* ambari.blueprints
+* ambari.blueprints(blueprint_name)
+* ambari.blueprints(blueprint_name).host_groups
+* ambari.blueprints(blueprint_name).host_groups(name)
+* ambari.bootstrap
+* ambari.bootstrap(requestId)
+* ambari.clusters
+* ambari.clusters(cluster_name)
+* ambari.clusters(cluster_name).configurations
+* ambari.clusters(cluster_name).configurations(type)
+* ambari.clusters(cluster_name).hosts
+* ambari.clusters(cluster_name).hosts(host_name)
+* ambari.clusters(cluster_name).hosts(host_name).components
+* ambari.clusters(cluster_name).hosts(host_name).components(component_name)
+* ambari.clusters(cluster_name).requests
+* ambari.clusters(cluster_name).requests(id)
+* ambari.clusters(cluster_name).services
+* ambari.clusters(cluster_name).services(service_name)
+* ambari.clusters(cluster_name).services(service_name).components
+* ambari.clusters(cluster_name).services(service_name).components(component_name)
+* ambari.groups
+* ambari.groups(group_name)
+* ambari.groups(group_name).members
+* ambari.groups(group_name).members(user_name)
+* ambari.hosts
+* ambari.hosts(host_name)
+* ambari.services
+* ambari.services(service_name)
+* ambari.services(service_name).components
+* ambari.services(service_name).components(component_name)
+* ambari.stacks
+* ambari.stacks(stack_name)
+* ambari.stacks(stack_name).versions
+* ambari.stacks(stack_name).versions(stack_version)
+* ambari.stacks(stack_name).versions(stack_version).operating_systems
+* ambari.stacks(stack_name).versions(stack_version).operating_systems(os_type)
+* ambari.stacks(stack_name).versions(stack_version).operating_systems(os_type).repositories
+* ambari.stacks(stack_name).versions(stack_version).operating_systems(os_type).repositories(repo_id)
+* ambari.stacks(stack_name).versions(stack_version).services
+* ambari.stacks(stack_name).versions(stack_version).services(service_name)
+* ambari.stacks(stack_name).versions(stack_version).services(service_name).components
+* ambari.stacks(stack_name).versions(stack_version).services(service_name).components(component_name)
+* ambari.stacks(stack_name).versions(stack_version).services(service_name).configurations
+* ambari.stacks(stack_name).versions(stack_version).services(service_name).configurations(type)
+* ambari.users
+* ambari.users(user_name)
+* ambari.users(user_name).privileges
+* ambari.users(user_name).privileges(privilege_id)
+* ambari.views
+* ambari.views(view_name)
+* ambari.views(view_name).versions
+* ambari.views(view_name).versions(version)
+* ambari.views(view_name).versions(version).instances
+* ambari.views(view_name).versions(version).instances(instance_name)
+* ambari.views(view_name).versions(version).permissions
+* ambari.views(view_name).versions(version).permissions(permission_id)
 
 Testing
 -----------
@@ -197,10 +296,11 @@ Ambari Versions
 -----------
 
 The goal of the client is to work with multiple versions of Ambari by smoothing
-out the differences for the user.  There is work to be done to make that happen,
-but there is support for passing a version in to the client.
+out the differences for the user.  The client can automatically detect the version
+of Ambari running on the server:
 
-    >>> client = Ambari(..., version="1.7.0")
+    >>> ambari.version
+    ('1', '7', '0')
 
 This client has only been tested against Ambari 1.7+.  If you need
 support for older versions, you might need to submit patches for anything
@@ -220,4 +320,6 @@ Command-Line Interface
 
 A CLI was originally planned, but never implemented.  Some methods that require
 a large JSON body are not amenable to a CLI, but we could easily build one for
-other methods if people want one.  We'll revisit this at a later date.
+other methods if people want one.  We replaced the idea with the Ambari Shell for
+now, but are open to revisiting this if demand is present.
+
