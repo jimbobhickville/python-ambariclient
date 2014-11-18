@@ -38,7 +38,7 @@ are those for the Ambari Quick Start setup, but you can override them by creatin
 a JSON configuration file in $HOME/.ambari:
 
     {
-        "host": "my.ambari.server.com,
+        "host": "my.ambari.server.com",
         "port": 80,
         "username": "my-username",
         "password": "my-password"
