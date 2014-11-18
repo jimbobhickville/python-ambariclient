@@ -108,7 +108,7 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
 
 class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
     path = 'requests'
-    list_key = 'Requests'
+    data_key = 'Requests'
     primary_key = 'id'
     fields = ('id', 'request_context', 'status', 'progress_percent',
               'queued_task_count', 'task_count', 'completed_task_count')
@@ -127,7 +127,7 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
 
 class Component(base.QueryableModel):
     path = 'components'
-    list_key = 'ServiceComponentInfo'
+    data_key = 'ServiceComponentInfo'
     primary_key = 'component_name'
     fields = ('component_name', 'component_version', 'server_clock',
               'service_name', 'properties')
@@ -195,7 +195,7 @@ class HostComponentCollection(base.QueryableModelCollection):
 class HostComponent(Component):
     collection_class = HostComponentCollection
     path = 'host_components'
-    list_key = 'HostRoles'
+    data_key = 'HostRoles'
     fields = ('cluster_name', 'component_name', 'desired_stack_id',
               'desired_state', 'host_name', 'maintenance_state', 'service_name',
               'stack_id', 'stale_configs', 'state', 'actual_configs')
@@ -259,7 +259,7 @@ class HostComponent(Component):
 
 class Host(base.PollableMixin, base.QueryableModel):
     path = 'hosts'
-    list_key = 'Hosts'
+    data_key = 'Hosts'
     primary_key = 'host_name'
     fields = ('host_name', 'cluster_name', 'cpu_count', 'os_arch', 'disk_info',
               'os_type', 'total_mem', 'host_state', 'ip', 'rack_info',
@@ -368,14 +368,14 @@ class ClusterHost(Host):
 
 class TaskAttempt(base.QueryableModel):
     path = 'taskattempts'
-    list_key = 'TaskAttempt'
+    data_key = 'TaskAttempt'
     primary_key = ''
     fields = ()
 
 
 class Job(base.QueryableModel):
     path = 'jobs'
-    list_key = 'Job'
+    data_key = 'Job'
     primary_key = ''
     fields = ()
     relationships = {
@@ -385,7 +385,7 @@ class Job(base.QueryableModel):
 
 class Workflow(base.QueryableModel):
     path = 'workflows'
-    list_key = 'Workflow'
+    data_key = 'Workflow'
     primary_key = ''
     fields = ()
     relationships = {
@@ -395,7 +395,7 @@ class Workflow(base.QueryableModel):
 
 class Service(base.QueryableModel):
     path = 'services'
-    list_key = 'ServiceInfo'
+    data_key = 'ServiceInfo'
     primary_key = 'service_name'
     fields = ('service_name', 'cluster_name', 'maintenance_state', 'state')
     relationships = {
@@ -404,7 +404,7 @@ class Service(base.QueryableModel):
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
-    list_key = 'Config'
+    data_key = 'Config'
     primary_key = 'type'
     fields = ('cluster_name', 'tag', 'type', 'version', 'properties')
 
@@ -418,7 +418,7 @@ class Configuration(base.QueryableModel):
 
 
 class StackConfiguration(Configuration):
-    list_key = 'StackConfigurations'
+    data_key = 'StackConfigurations'
     fields = ('property_name', 'service_name', 'stack_name', 'stack_version',
               'final', 'property_description', 'property_type', 'property_value',
               'type')
@@ -459,7 +459,7 @@ class StackConfigurationList(Configuration):
 
 class Cluster(base.QueryableModel):
     path = 'clusters'
-    list_key = 'Clusters'
+    data_key = 'Clusters'
     primary_key = 'cluster_name'
     fields = ('cluster_id', 'cluster_name', 'health_report', 'provisioning_state',
               'total_hosts', 'version', 'desired_configs',
@@ -480,7 +480,7 @@ class BlueprintHostGroup(base.DependentModel):
 
 class Blueprint(base.QueryableModel):
     path = 'blueprints'
-    list_key = 'Blueprints'
+    data_key = 'Blueprints'
     primary_key = 'blueprint_name'
     fields = ('blueprint_name', 'stack_name', 'stack_version')
     relationships = {
@@ -489,7 +489,7 @@ class Blueprint(base.QueryableModel):
 
 
 class StackServiceComponent(Component):
-    list_key = 'StackServiceComponents'
+    data_key = 'StackServiceComponents'
     primary_key = 'component_name'
     fields = ('component_name', 'service_name', 'stack_name', 'stack_version',
               'cardinality', 'component_category', 'custom_commands',
@@ -498,7 +498,7 @@ class StackServiceComponent(Component):
 
 class StackService(base.QueryableModel):
     path = 'services'
-    list_key = 'StackServices'
+    data_key = 'StackServices'
     primary_key = 'service_name'
     fields = ('service_name', 'stack_name', 'stack_version', 'display_name',
               'comments', 'custom_commands', 'required_services',
@@ -512,7 +512,7 @@ class StackService(base.QueryableModel):
 
 class Repository(base.QueryableModel):
     path = 'repositories'
-    list_key = 'Repositories'
+    data_key = 'Repositories'
     primary_key = 'repo_id'
     fields = ('repo_id', 'repo_name', 'os_type', 'stack_name', 'stack_version',
               'base_url', 'default_base_url', 'latest_base_url', 'mirrors_list')
@@ -520,7 +520,7 @@ class Repository(base.QueryableModel):
 
 class OperatingSystem(base.QueryableModel):
     path = 'operatingSystems'
-    list_key = 'OperatingSystems'
+    data_key = 'OperatingSystems'
     primary_key = 'os_type'
     fields = ('os_type', 'stack_name', 'stack_version')
     relationships = {
@@ -530,7 +530,7 @@ class OperatingSystem(base.QueryableModel):
 
 class Version(base.QueryableModel):
     path = 'versions'
-    list_key = 'Versions'
+    data_key = 'Versions'
     primary_key = 'stack_version'
     fields = ('stack_name', 'stack_version', 'active', 'min_upgrade_version',
               'parent_stack_version', 'config_types')
@@ -542,7 +542,7 @@ class Version(base.QueryableModel):
 
 class Stack(base.QueryableModel):
     path = 'stacks'
-    list_key = 'Stacks'
+    data_key = 'Stacks'
     primary_key = 'stack_name'
     fields = ('stack_name')
     relationships = {
@@ -552,7 +552,7 @@ class Stack(base.QueryableModel):
 
 class UserPrivilege(base.QueryableModel):
     path = 'privileges'
-    list_key = 'PrivilegeInfo'
+    data_key = 'PrivilegeInfo'
     primary_key = 'privilege_id'
     fields = ('privilege_id', 'permission_name', 'principal_name',
               'principal_type', 'type', 'user_name', 'cluster_name')
@@ -560,7 +560,7 @@ class UserPrivilege(base.QueryableModel):
 
 class User(base.QueryableModel):
     path = 'users'
-    list_key = 'Users'
+    data_key = 'Users'
     primary_key = 'user_name'
     fields = ('user_name', 'active', 'admin', 'groups', 'ldap_user', 'password')
     relationships = {
@@ -570,14 +570,14 @@ class User(base.QueryableModel):
 
 class GroupMember(base.QueryableModel):
     path = 'members'
-    list_key = 'MemberInfo'
+    data_key = 'MemberInfo'
     primary_key = 'user_name'
     fields = ('user_name', 'group_name')
 
 
 class Group(base.QueryableModel):
     path = 'groups'
-    list_key = 'Groups'
+    data_key = 'Groups'
     primary_key = 'group_name'
     fields = ('group_name', 'ldap_group')
     relationships = {
@@ -587,7 +587,7 @@ class Group(base.QueryableModel):
 
 class ViewPermission(base.QueryableModel):
     path = 'permissions'
-    list_key = 'PermissionInfo'
+    data_key = 'PermissionInfo'
     primary_key = 'permission_id'
     fields = ('permission_id', 'version', 'view_name', 'permission_name',
               'resource_name')
@@ -595,7 +595,7 @@ class ViewPermission(base.QueryableModel):
 
 class ViewInstance(base.QueryableModel):
     path = 'instances'
-    list_key = 'ViewInstanceInfo'
+    data_key = 'ViewInstanceInfo'
     primary_key = 'instance_name'
     fields = ('instance_name', 'context_path', 'description', 'icon64_path',
               'icon_path', 'label', 'static', 'version', 'view_name', 'visible',
@@ -605,7 +605,7 @@ class ViewInstance(base.QueryableModel):
 
 class ViewVersion(base.QueryableModel):
     path = 'versions'
-    list_key = 'ViewVersionInfo'
+    data_key = 'ViewVersionInfo'
     primary_key = 'version'
     fields = ('version', 'view_name', 'archive', 'description', 'label',
               'masker_class', 'parameters', 'status', 'status_detail', 'system')
@@ -617,7 +617,7 @@ class ViewVersion(base.QueryableModel):
 
 class View(base.QueryableModel):
     path = 'views'
-    list_key = 'ViewInfo'
+    data_key = 'ViewInfo'
     primary_key = 'view_name'
     fields = ('view_name')
     relationships = {
@@ -626,11 +626,11 @@ class View(base.QueryableModel):
 
 
 class RootServiceComponent(Component):
-    list_key = 'RootServiceComponents'
+    data_key = 'RootServiceComponents'
 
 
 class RootService(Service):
-    list_key = 'RootService'
+    data_key = 'RootService'
     fields = ('service_name')
     relationships = {
         'components': RootServiceComponent,

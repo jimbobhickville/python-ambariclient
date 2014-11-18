@@ -510,7 +510,7 @@ class QueryableModel(Model):
 
     collection_class = QueryableModelCollection
     path = None
-    list_key = None
+    data_key = None
     relationships = {}
 
     def __init__(self, *args, **kwargs):
@@ -556,11 +556,11 @@ class QueryableModel(Model):
         return self
 
     def _generate_input_dict(self, **kwargs):
-        if self.list_key:
-            data = { self.list_key: {}}
+        if self.data_key:
+            data = { self.data_key: {}}
             for field in kwargs:
                 if field in self.fields:
-                    data[self.list_key][field] = kwargs[field]
+                    data[self.data_key][field] = kwargs[field]
                 else:
                     data[field] = kwargs[field]
             return data
@@ -572,7 +572,7 @@ class QueryableModel(Model):
         """The load method parses the raw JSON response from the server.
 
         Most models are not returned in the main response body, but in a key
-        such as 'Clusters', defined by the 'list_key' attribute on the class.
+        such as 'Clusters', defined by the 'data_key' attribute on the class.
         Also, related objects are often returned and can be used to pre-cache
         related model objects without having to contact the server again.  This
         method handles all of those cases.
@@ -581,7 +581,7 @@ class QueryableModel(Model):
         details are returned in a 'Requests' section. We need to store that
         request object so we can poll it until completion.
         """
-        if 'Requests' in response and 'Requests' != self.list_key:
+        if 'Requests' in response and 'Requests' != self.data_key:
             from ambariclient.models import Request
             self.request = Request(self.cluster.requests,
                                    href=response.get('href'),
@@ -589,8 +589,8 @@ class QueryableModel(Model):
         else:
             if 'href' in response:
                 self._href = response.pop('href')
-            if self.list_key and self.list_key in response:
-                self._data.update(response.pop(self.list_key))
+            if self.data_key and self.data_key in response:
+                self._data.update(response.pop(self.data_key))
                 # preload related object collections, if received
                 for rel in [x for x in self.relationships if x in response]:
                     rel_class = self.relationships[rel]
@@ -598,7 +598,7 @@ class QueryableModel(Model):
                         self.client, rel_class, parent=self
                     )
                     self._relationship_cache[rel] = collection(response[rel])
-            elif not self.list_key:
+            elif not self.data_key:
                 self._data.update(response)
 
     @events.evented
@@ -625,7 +625,7 @@ class QueryableModel(Model):
 
         is generally converted to:
 
-            PUT model.url { model.list_key: {'a': 'b', 'b': 'c' } }
+            PUT model.url { model.data_key: {'a': 'b', 'b': 'c' } }
 
         If the request body doesn't follow that pattern, you'll need to overload
         this method to handle your particular case.
