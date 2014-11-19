@@ -51,6 +51,26 @@ def bootstrap_done(bootstrap, **kwargs):
     print "Wait for Bootstrap Hosts %s: FINISHED\n" % (hostnames)
 
 
+def reference(model_class=None, stack=None):
+    if stack is None:
+        stack = ['ambari']
+
+    if model_class:
+        relationships = model_class.relationships
+    else:
+        relationships = ENTRY_POINTS
+
+    for rel in sorted(relationships.keys()):
+        new_stack = list(stack)
+        new_stack.append(rel)
+        print '.'.join(new_stack)
+        rel_model_class = relationships[rel]
+        if rel_model_class.primary_key is not None:
+            new_stack[-1] = "%s(%s)" % (new_stack[-1], rel_model_class.primary_key)
+            print '.'.join(new_stack)
+            reference(model_class=rel_model_class, stack=new_stack)
+
+
 if os.environ.get('PYTHONSTARTUP', '') == __file__:
     for event in ['create', 'update', 'delete']:
         for event_state in [events.states.STARTED, events.states.FINISHED]:
@@ -75,24 +95,6 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
             config.update(json.load(config_file))
 
     ambari = Ambari(**config)
-
-    def dump_hierarchy(model_class=None, stack=None):
-        if stack is None:
-            stack = ['ambari']
-
-        if model_class:
-            relationships = model_class.relationships
-        else:
-            relationships = ENTRY_POINTS
-
-        for rel in sorted(relationships.keys()):
-            new_stack = list(stack)
-            new_stack.append(rel)
-            print '.'.join(new_stack)
-            rel_model_class = relationships[rel]
-            new_stack[-1] = "%s(%s)" % (new_stack[-1], rel_model_class.primary_key)
-            print '.'.join(new_stack)
-            dump_hierarchy(model_class=rel_model_class, stack=new_stack)
 
 
     print "\nAmbari client available as 'ambari'"
