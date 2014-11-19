@@ -370,6 +370,9 @@ class Model(object):
     @property
     def identifier(self):
         """A model's identifier is the value of its primary key."""
+        if self.primary_key is None:
+            return None
+
         if self.primary_key not in self._data:
             self.inflate()
         return str(self._data[self.primary_key])

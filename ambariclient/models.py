@@ -269,6 +269,12 @@ class HostComponent(Component):
         return self
 
 
+class Alert(base.DependentModel):
+    fields = ("description", "host_name", "last_status", "last_status_time",
+              "service_name", "status", "status_time", "output", "actual_status")
+    primary_key = None
+
+
 class Host(base.PollableMixin, base.QueryableModel):
     path = 'hosts'
     data_key = 'Hosts'
@@ -359,7 +365,13 @@ class HostMaintenance(object):
 class ClusterHost(Host):
     relationships = {
         'components': HostComponent,
+        'alerts': Alert,
     }
+
+    def load(self, response):
+        if 'alerts' in response:
+            response['alerts'] = response['alerts']['detail']
+        return super(ClusterHost, self).load(response)
 
     def create(self, *args, **kwargs):
         if 'host_group' in kwargs:
