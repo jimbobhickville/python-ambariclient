@@ -63,6 +63,10 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         # we always want the verbose response here
         kwargs['verbose'] = True
 
+        if 'ssh_key_path' in kwargs:
+            with open(kwargs.pop('ssh_key_path')) as f:
+                kwargs['sshKey'] = f.read()
+
         data = self._generate_input_dict(**kwargs)
         self.load(self.client.post(self.url,
                              content_type="application/json",
