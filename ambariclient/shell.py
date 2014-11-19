@@ -71,6 +71,10 @@ def reference(model_class=None, stack=None):
             reference(model_class=rel_model_class, stack=new_stack)
 
 
+def log(level):
+    logging.getLogger().setLevel(level)
+
+
 if os.environ.get('PYTHONSTARTUP', '') == __file__:
     for event in ['create', 'update', 'delete']:
         for event_state in [events.states.STARTED, events.states.FINISHED]:
