@@ -74,6 +74,10 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         return self
 
     @property
+    def has_failed(self):
+        return True if self.status == 'ERROR' else False
+
+    @property
     def is_finished(self):
         return True if self.status == 'SUCCESS' else False
 
@@ -112,6 +116,10 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
     primary_key = 'id'
     fields = ('id', 'request_context', 'status', 'progress_percent',
               'queued_task_count', 'task_count', 'completed_task_count')
+
+    @property
+    def has_failed(self):
+        return True if self.status == 'FAILED' else False
 
     @property
     def is_finished(self):
@@ -272,19 +280,17 @@ class Host(base.PollableMixin, base.QueryableModel):
     default_timeout = 180
 
     @property
-    def is_finished(self):
-        """Make sure the host is registered with Ambari.
+    def has_failed(self):
+        """Detect whether the host registration failed.
 
-        To allow for polling a Host until it's registered with Ambari, we need
-        to check for whether we get a 404 error on requesting that resource.
-        It seems like a bit of a hack, but it makes sense to me.  If this proves
-        confusing, we can revisit it.
+        There's nothing to do other than wait for it to time out on getting a
+        HEALTHY state.
         """
-        try:
-            self.inflate()
-        except exceptions.NotFound:
-            LOG.debug("Host not found: %s", self.host_name)
-            return False
+        return False
+
+    @property
+    def is_finished(self):
+        """Make sure the host is registered with Ambari."""
         return True if self.host_status == 'HEALTHY' else False
 
     def wait(self, **kwargs):
@@ -292,6 +298,20 @@ class Host(base.PollableMixin, base.QueryableModel):
         # there might be a more Pythonic way to handle this
         if self.request:
             self.request.wait(**kwargs)
+
+        # the host might give a 404 on the first few attempts, give it a chance
+        # to register
+        for x in range(1, 7):
+            try:
+                self.inflate()
+            except exceptions.NotFound:
+                if x == 6:
+                    raise
+                else:
+                    self._is_inflating = False
+                    LOG.debug("Host not found (attempt %d): %s", x, self.host_name)
+                    time.sleep(5)
+
         return super(Host, self).wait(**kwargs)
 
 

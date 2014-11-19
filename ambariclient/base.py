@@ -42,6 +42,10 @@ class PollableMixin(object):
     default_timeout = 3600
 
     @property
+    def has_failed(self):
+        raise NotImplementedError("'has_failed' must be defined by subclasses")
+
+    @property
     def is_finished(self):
         raise NotImplementedError("'is_finished' must be defined by subclasses")
 
@@ -54,7 +58,9 @@ class PollableMixin(object):
 
         end = datetime.utcnow() + timedelta(seconds=timeout)
         while datetime.utcnow() < end:
-            if self.is_finished:
+            if self.has_failed:
+                raise exceptions.Failed(model=self)
+            elif self.is_finished:
                 return self
             else:
                 events.publish(self, 'wait', events.states.PROGRESS)

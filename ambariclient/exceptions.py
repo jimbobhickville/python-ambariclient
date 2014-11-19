@@ -21,6 +21,7 @@ Adapted from python-novaclient with some changes.  Original source:
 https://github.com/openstack/python-novaclient/blob/master/novaclient/exceptions.py
 """
 
+
 class ClientError(Exception):
     """
     The base exception class for all exceptions this library raises.
@@ -36,7 +37,7 @@ class ClientError(Exception):
 
 class Timeout(Exception):
     """
-    The base exception class for all exceptions this library raises.
+    An exception indicating a timeout on a long-running operation.
     """
     message = 'Operation timeout exceeded'
 
@@ -46,6 +47,22 @@ class Timeout(Exception):
 
     def __str__(self):
         return "Timed out after %d seconds: %s" % (self.timeout, self.message)
+
+
+class Failed(Exception):
+    """
+    An exception indicating that a long-running operation failed to complete successfully.
+    """
+    message = 'Operation failed to complete'
+
+    def __init__(self, model, message=None):
+        self.model = model
+        self.message = message or self.__class__.message
+
+    def __str__(self):
+        return "Failure detected for %s/%s: %s" % (self.model.__class__.__name__,
+                                                   self.model.identifier,
+                                                   self.message)
 
 
 class HttpError(Exception):
