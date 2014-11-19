@@ -75,6 +75,12 @@ def log(level):
     logging.getLogger().setLevel(level)
 
 
+def help():
+    print "Ambari Shell Help"
+    print " - log(new_level) will reset the logger level"
+    print " - reference() will show you all available client method chains"
+
+
 if os.environ.get('PYTHONSTARTUP', '') == __file__:
     for event in ['create', 'update', 'delete']:
         for event_state in [events.states.STARTED, events.states.FINISHED]:
@@ -104,3 +110,4 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     print "\nAmbari client available as 'ambari'"
     print " - Ambari Server is %s" % ambari.host
     print " - Ambari Version is %s\n" % utils.version_str(ambari.version)
+    print "help() for help\n"
