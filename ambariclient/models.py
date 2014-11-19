@@ -114,12 +114,24 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         return self
 
 
+class Task(base.QueryableModel):
+    path = 'tasks'
+    data_key = 'Tasks'
+    primary_key = 'id'
+    fields = ('id', 'cluster_name', 'host_name', 'request_id', 'exit_code', 'stdout',
+              'stderr', 'status', 'attempt_cnt', 'command', 'role', 'start_time',
+              'stage_id')
+
+
 class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
     path = 'requests'
     data_key = 'Requests'
     primary_key = 'id'
     fields = ('id', 'request_context', 'status', 'progress_percent',
               'queued_task_count', 'task_count', 'completed_task_count')
+    relationships = {
+        'tasks': Task,
+    }
 
     @property
     def has_failed(self):
