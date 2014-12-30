@@ -92,6 +92,7 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     config = {
         "host": "c6401.ambari.apache.org",
         "port": 8080,
+        "protocol": "http",
         "username": "admin",
         "password": "admin"
     }
@@ -103,8 +104,7 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
 
     ambari = Ambari(**config)
 
-
     print "\nAmbari client available as 'ambari'"
-    print " - Ambari Server is %s" % ambari.host
+    print " - Ambari Server is %s" % ambari.base_url
     print " - Ambari Version is %s\n" % utils.version_str(ambari.version)
     print "help() for help\n"

@@ -60,3 +60,18 @@ def version_str(version):
         return '.'.join([str(x) for x in version])
     else:
         raise Exception("Invalid version: %s" % version)
+
+
+def generate_base_url(host, protocol=None, port=None):
+    matches = re.match(r'^(https?)?(://)?([^/:]+)(:?\d+)?', host)
+    (derived_proto, _, derived_host, derived_port) = matches.groups()
+    if derived_proto is None:
+        derived_proto = protocol or 'http'
+    if derived_port is None:
+        derived_port = port or 8080
+    url_params = {
+        'protocol': derived_proto,
+        'host': derived_host,
+        'port': str(derived_port),
+    }
+    return "{protocol}://{host}:{port}".format(**url_params)

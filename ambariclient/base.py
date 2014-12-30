@@ -211,7 +211,7 @@ class QueryableModelCollection(ModelCollection):
         """The url for this collection."""
         if self.parent is None:
             # TODO: differing API Versions?
-            pieces = ['http:/', self.client.host, 'api', 'v1']
+            pieces = [self.client.base_url, 'api', 'v1']
         else:
             pieces = [self.parent.url]
 

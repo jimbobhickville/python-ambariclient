@@ -36,10 +36,6 @@ ENTRY_POINTS = {
 
 OLDEST_SUPPORTED_VERSION = (1, 7, 0)
 
-# TODO: abort conditions on wait() calls, if things fail
-# TODO: callbacks on wait() polling, to output progress, etc
-# TODO: properly categorized exceptions
-# TODO: better logging
 # TODO: flesh out version handling, this is weaksauce
 # TODO: Sphinx docs
 class Ambari(object):
@@ -61,17 +57,15 @@ class Ambari(object):
 
     """
     def __init__(self, host, port=None, username=None, password=None,
-                 identifier=None):
-        if port is None:
-            port = 8080
+                 identifier=None, protocol=None, validate_ssl=True):
 
-        self.host = ':'.join([host, str(port)])
+        self.base_url = utils.generate_base_url(host, port=port, protocol=protocol)
 
         if identifier is None:
             identifier = 'python-ambariclient'
 
         self.client = HttpClient(username=username, password=password,
-                                 identifier=identifier)
+                                 identifier=identifier, validate_ssl=validate_ssl)
         self._version = None
 
     # TODO: make this check automatic at some point
@@ -115,11 +109,12 @@ class HttpClient(object):
     was supplied by the API.  This should be uncommon except for error cases, but
     cases do exist either due to Ambari bugs or other mitigating circumstances.
     """
-    def __init__(self, username, password, identifier):
+    def __init__(self, username, password, identifier, validate_ssl=True):
 
         self.request_params = {
             'headers': {'X-Requested-By': identifier},
             'auth': (username, password),
+            'verify': validate_ssl,
         }
 
     def request(self, method, url, content_type=None, **kwargs):
