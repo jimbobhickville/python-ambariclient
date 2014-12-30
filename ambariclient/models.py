@@ -501,6 +501,10 @@ class StackConfigurationList(Configuration):
 
         self.files = models
 
+    def to_dict(self):
+        self.inflate()
+        return { 'files': [x.to_dict() for x in self.files] }
+
 
 class Cluster(base.QueryableModel):
     path = 'clusters'
