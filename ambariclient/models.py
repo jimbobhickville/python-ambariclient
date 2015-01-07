@@ -111,6 +111,14 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         return self
 
 
+class Action(base.QueryableModel):
+    path = 'actions'
+    data_key = 'Actions'
+    primary_key = 'action_name'
+    fields = ('action_name', 'action_type', 'default_timeout', 'description', 'inputs',
+              'target_component', 'target_service', 'target_type')
+
+
 class Task(base.QueryableModel):
     path = 'tasks'
     data_key = 'Tasks'
@@ -124,7 +132,7 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
     path = 'requests'
     data_key = 'Requests'
     primary_key = 'id'
-    fields = ('id', 'request_context', 'status', 'progress_percent',
+    fields = ('id', 'request_context', 'status', 'request_status', 'progress_percent',
               'queued_task_count', 'task_count', 'completed_task_count')
     relationships = {
         'tasks': Task,
@@ -447,6 +455,7 @@ class Service(base.QueryableModel):
         'components': Component,
     }
 
+
 class Configuration(base.QueryableModel):
     path = 'configurations'
     data_key = 'Config'
@@ -520,6 +529,30 @@ class Cluster(base.QueryableModel):
         'configurations': Configuration,
         'workflows': Workflow,
     }
+
+    def execute_action(self, action, context, parameters=None, hosts=None):
+        """Execute a custom action on the cluster.
+
+        The custom action gets executed on the specified hosts of the cluster.
+
+        :param action: Custom action name
+        :param context: Context name for the specific request
+        :param parameters: Dictionary of input parameters that are supported by
+                           the custom script
+        :param hosts: Comma separated list of hosts to run the action on
+        :return: Current status of the request
+        """
+        self.load(self.client.post(self.cluster.requests.url, data={
+            "RequestInfo": {
+                "action": action,
+                "context": context,
+                "parameters": parameters
+            },
+            "Requests/resource_filters": [{
+                "hosts": hosts,
+            }],
+        }))
+        return self.request
 
 
 class BlueprintHostGroup(base.DependentModel):
