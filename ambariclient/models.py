@@ -601,7 +601,7 @@ class Repository(base.QueryableModel):
 
 
 class OperatingSystem(base.QueryableModel):
-    path = 'operatingSystems'
+    path = 'operating_systems'
     data_key = 'OperatingSystems'
     primary_key = 'os_type'
     fields = ('os_type', 'stack_name', 'stack_version')
