@@ -140,7 +140,7 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
 
     @property
     def has_failed(self):
-        return True if self.status == 'FAILED' else False
+        return True if self.request_status == 'FAILED' else False
 
     @property
     def is_finished(self):
