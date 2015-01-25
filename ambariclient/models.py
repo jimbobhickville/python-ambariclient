@@ -644,7 +644,7 @@ class User(base.QueryableModel):
     path = 'users'
     data_key = 'Users'
     primary_key = 'user_name'
-    fields = ('user_name', 'active', 'admin', 'groups', 'ldap_user', 'password')
+    fields = ('user_name', 'active', 'admin', 'groups', 'ldap_user', 'password', 'old_password')
     relationships = {
         'privileges': UserPrivilege,
     }
