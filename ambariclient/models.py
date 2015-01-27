@@ -466,7 +466,6 @@ class Configuration(base.QueryableModel):
         # sigh, this API does not follow the pattern at all
         for field in self.fields:
             if field in response and field not in response['Config']:
-                LOG.error("Config has %s in main response body", field)
                 response['Config'][field] = response.pop(field)
         return super(Configuration, self).load(response)
 
