@@ -140,7 +140,7 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
 
     @property
     def has_failed(self):
-        return True if self.status == 'FAILED' else False
+        return True if self.request_status == 'FAILED' else False
 
     @property
     def is_finished(self):
@@ -600,7 +600,7 @@ class Repository(base.QueryableModel):
 
 
 class OperatingSystem(base.QueryableModel):
-    path = 'operatingSystems'
+    path = 'operating_systems'
     data_key = 'OperatingSystems'
     primary_key = 'os_type'
     fields = ('os_type', 'stack_name', 'stack_version')
@@ -643,7 +643,7 @@ class User(base.QueryableModel):
     path = 'users'
     data_key = 'Users'
     primary_key = 'user_name'
-    fields = ('user_name', 'active', 'admin', 'groups', 'ldap_user', 'password')
+    fields = ('user_name', 'active', 'admin', 'groups', 'ldap_user', 'password', 'old_password')
     relationships = {
         'privileges': UserPrivilege,
     }
