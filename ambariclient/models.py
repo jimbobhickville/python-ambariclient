@@ -526,7 +526,8 @@ class Cluster(base.QueryableModel):
         'requests': Request,
         'services': Service,
         'configurations': Configuration,
-        'workflows': Workflow,
+# the workflows API doesn't appear to do anything yet
+#        'workflows': Workflow,
     }
 
     def execute_action(self, action, context, parameters=None, hosts=None):
