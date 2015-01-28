@@ -58,15 +58,16 @@ class Ambari(object):
 
     """
     def __init__(self, host, port=None, username=None, password=None,
-                 identifier=None, protocol=None, validate_ssl=True):
+                 identifier=None, protocol=None, validate_ssl=True, max_retries=5):
 
         self.base_url = utils.generate_base_url(host, port=port, protocol=protocol)
 
         if identifier is None:
             identifier = 'python-ambariclient'
 
-        self.client = HttpClient(username=username, password=password,
-                                 identifier=identifier, validate_ssl=validate_ssl)
+        self.client = HttpClient(host=self.base_url, username=username,
+                                 password=password, identifier=identifier,
+                                 validate_ssl=validate_ssl, max_retries=max_retries)
         self._version = None
 
     # TODO: make this check automatic at some point
@@ -110,17 +111,22 @@ class HttpClient(object):
     was supplied by the API.  This should be uncommon except for error cases, but
     cases do exist either due to Ambari bugs or other mitigating circumstances.
     """
-    def __init__(self, username, password, identifier, validate_ssl=True):
+    def __init__(self, host, username, password, identifier, validate_ssl=True,
+                 max_retries=5):
 
         self.request_params = {
             'headers': {'X-Requested-By': identifier},
             'auth': (username, password),
             'verify': validate_ssl,
         }
+        # automatically retry requests on connection errors
+        self.session = requests.Session()
+        adapter = requests.adapters.HTTPAdapter(max_retries=max_retries)
+        self.session.mount(host, adapter)
 
     def request(self, method, url, content_type=None, **kwargs):
         # doing it this way keeps the magic for following redirects intact
-        requests_method = getattr(requests, method)
+        requests_method = getattr(self.session, method)
         params = copy.deepcopy(self.request_params)
         params.update(kwargs)
 
