@@ -90,9 +90,7 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     events.subscribe(models.Bootstrap, 'wait', bootstrap_done, events.states.FINISHED)
 
     config = {
-        "host": "c6401.ambari.apache.org",
-        "port": 8080,
-        "protocol": "http",
+        "host": "http://c6401.ambari.apache.org:8080",
         "username": "admin",
         "password": "admin"
     }
