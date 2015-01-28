@@ -14,61 +14,76 @@ import pytest
 from ambariclient import utils
 
 
-def test_normalize_camel_case():
-    assert(utils.normalize_camel_case('camelCase') == 'Camel Case')
-    assert(utils.normalize_camel_case('CamelCase') == 'Camel Case')
-    assert(utils.normalize_camel_case('camelcase') == 'Camelcase')
-    assert(utils.normalize_camel_case('camelcasE') == 'Camelcas E')
-    assert(utils.normalize_camel_case('CAMELCASE') == 'CAMELCASE')
-    assert(utils.normalize_camel_case('cAMELCASE') == 'C AMELCASE')
-    assert(utils.normalize_camel_case('camelCaseTrio') == 'Camel Case Trio')
+@pytest.mark.parametrize("original,expected", [
+    ('camelCase', 'Camel Case'),
+    ('CamelCase', 'Camel Case'),
+    ('camelcase', 'Camelcase'),
+    ('camelcasE', 'Camelcas E'),
+    ('CAMELCASE', 'CAMELCASE'),
+    ('cAMELCASE', 'C AMELCASE'),
+    ('camelCaseTrio', 'Camel Case Trio'),
+])
+def test_normalize_camel_case(original, expected):
+    assert(utils.normalize_camel_case(original) == expected)
 
-def test_normalize_underscore_case():
-    assert(utils.normalize_underscore_case('underscore_case') == 'Underscore Case')
-    assert(utils.normalize_underscore_case('UNDERSCORE_CASE') == 'Underscore Case')
-    assert(utils.normalize_underscore_case('UnderScore_Case') == 'Underscore Case')
-    assert(utils.normalize_underscore_case('underscoreCase') == 'Underscorecase')
-    assert(utils.normalize_underscore_case('underscore_case_trio') == 'Underscore Case Trio')
+@pytest.mark.parametrize("original,expected", [
+    ('underscore_case', 'Underscore Case'),
+    ('UNDERSCORE_CASE', 'Underscore Case'),
+    ('UnderScore_Case', 'Underscore Case'),
+    ('underscoreCase', 'Underscorecase'),
+    ('underscore_case_trio', 'Underscore Case Trio'),
+])
+def test_normalize_underscore_case(original, expected):
+    assert(utils.normalize_underscore_case(original) == expected)
 
-def test_version_tuple():
-    assert(utils.version_tuple('1.7.0') == (1, 7, 0))
-    assert(utils.version_tuple((1, 7, 0)) == (1, 7, 0))
-    with pytest.raises(ValueError):
-        utils.version_tuple('One Seven Zero')
+@pytest.mark.parametrize("original,expected", [
+    ('1.7.0', (1, 7, 0)),
+    ((1, 7, 0), (1, 7, 0)),
+])
+def test_version_tuple(original, expected):
+    assert(utils.version_tuple(original) == expected)
 
-def test_version_str():
-    assert(utils.version_str('1.7.0') == '1.7.0')
-    assert(utils.version_str((1, 7, 0)) == '1.7.0')
-    with pytest.raises(ValueError):
-        utils.version_str(('One', 'Seven', 'Zero'))
+@pytest.mark.parametrize("original,exc", [
+    ('One Seven Zero', ValueError),
+])
+def test_version_tuple_exc(original, exc):
+    pytest.raises(exc, utils.version_tuple, original)
 
-def test_generate_base_url():
-    assert(utils.generate_base_url('http://www.example.com/') == 'http://www.example.com:80')
-    assert(utils.generate_base_url('http://www.example.com/some/thing') ==
-           'http://www.example.com:80')
-    assert(utils.generate_base_url('https://www.example.com:8080/') ==
-           'https://www.example.com:8080')
-    assert(utils.generate_base_url('http://www.example.com') == 'http://www.example.com:80')
-    assert(utils.generate_base_url('https://www.example.com') == 'https://www.example.com:443')
-    assert(utils.generate_base_url('https://www.example.com:9090') ==
-           'https://www.example.com:9090')
-    assert(utils.generate_base_url('www.example.com', protocol='http') ==
-           'http://www.example.com:80')
-    assert(utils.generate_base_url('www.example.com', protocol='https') ==
-           'https://www.example.com:443')
-    assert(utils.generate_base_url('www.example.com', protocol='https', port=9090) ==
-           'https://www.example.com:9090')
-    assert(utils.generate_base_url('www.example.com', port=9090) ==
-           'http://www.example.com:9090')
-    assert(utils.generate_base_url('www.example.com:9090', protocol='https') ==
-           'https://www.example.com:9090')
-    assert(utils.generate_base_url('www.example.com:9090') ==
-           'http://www.example.com:9090')
-    with pytest.raises(ValueError):
-        utils.generate_base_url('ftp://www.example.com')
-    with pytest.raises(ValueError):
-        utils.generate_base_url('www.example.com', protocol='ftp')
-    with pytest.raises(ValueError):
-        utils.generate_base_url('www.example.com', port='foo')
-    with pytest.raises(ValueError):
-        utils.generate_base_url('www.example.com:foo')
+@pytest.mark.parametrize("original,expected", [
+    ((1, 7, 0), '1.7.0'),
+    ('1.7.0', '1.7.0'),
+])
+def test_version_str(original, expected):
+    assert(utils.version_str(original) == expected)
+
+@pytest.mark.parametrize("original,exc", [
+    (('One', 'Seven', 'Zero'), ValueError),
+])
+def test_version_str_exc(original, exc):
+    pytest.raises(exc, utils.version_str, original)
+
+@pytest.mark.parametrize("host,protocol,port,expected", [
+    ('http://www.example.com/', None, None, 'http://www.example.com:80'),
+    ('http://www.example.com/some/thing', None, None, 'http://www.example.com:80'),
+    ('https://www.example.com:8080/', None, None, 'https://www.example.com:8080'),
+    ('http://www.example.com', None, None, 'http://www.example.com:80'),
+    ('https://www.example.com', None, None, 'https://www.example.com:443'),
+    ('https://www.example.com:9090', None, None, 'https://www.example.com:9090'),
+    ('www.example.com', 'http', None, 'http://www.example.com:80'),
+    ('www.example.com', 'https', None, 'https://www.example.com:443'),
+    ('www.example.com', 'https', 9090, 'https://www.example.com:9090'),
+    ('www.example.com', None, 9090, 'http://www.example.com:9090'),
+    ('www.example.com:9090', 'https', None, 'https://www.example.com:9090'),
+    ('www.example.com:9090', None, None, 'http://www.example.com:9090'),
+])
+def test_generate_base_url(host, protocol, port, expected):
+    assert(utils.generate_base_url(host, protocol=protocol, port=port) == expected)
+
+@pytest.mark.parametrize("exc,host,protocol,port", [
+    (ValueError, 'ftp://www.example.com', None, None),
+    (ValueError, 'www.example.com', 'ftp', None),
+    (ValueError, 'ftp://www.example.com', None, 'foo'),
+    (ValueError, 'www.example.com:foo', None, None),
+])
+def test_generate_base_url_exc(exc, host, protocol, port):
+    pytest.raises(exc, utils.generate_base_url, host, protocol=protocol, port=port)
