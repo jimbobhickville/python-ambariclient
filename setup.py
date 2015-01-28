@@ -12,6 +12,7 @@
 
 import setuptools
 
+requires = open('requirements.txt').readlines()
 setuptools.setup(
     name="python-ambariclient",
     version=0.2,
@@ -20,7 +21,7 @@ setuptools.setup(
     description="Client library for Apache Ambari.",
     url="https://www.github.com/rackerlabs/python-ambariclient",
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
-    install_requires=['requests'],
+    install_requires=requires,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
