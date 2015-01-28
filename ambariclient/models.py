@@ -133,7 +133,7 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
     data_key = 'Requests'
     primary_key = 'id'
     fields = ('id', 'request_context', 'status', 'request_status', 'progress_percent',
-              'queued_task_count', 'task_count', 'completed_task_count')
+              'queued_task_count', 'task_count', 'completed_task_count', 'type')
     relationships = {
         'tasks': Task,
     }
