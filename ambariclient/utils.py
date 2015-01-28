@@ -63,8 +63,8 @@ def version_str(version):
 
 
 def generate_base_url(host, protocol=None, port=None):
-    matches = re.match(r'^(https?)?(://)?([^/:]+)(:?\d+)?', host)
-    (derived_proto, _, derived_host, derived_port) = matches.groups()
+    matches = re.match(r'^(https?)?(://)?([^/:]+)(:?)(\d+)?', host)
+    (derived_proto, _, derived_host, _, derived_port) = matches.groups()
     if derived_proto is None:
         derived_proto = protocol or 'http'
     if derived_port is None:
