@@ -25,7 +25,8 @@ def normalize_underscore_case(name):
     'Host Components'
 	"""
 	normalized = name.lower()
-	normalized = re.sub('_(\w)', lambda match: ' ' + match.group(1).upper(),
+	normalized = re.sub('_(\w)',
+                        lambda match: ' ' + match.group(1).upper(),
                         normalized)
 	return normalized[0].upper() + normalized[1:]
 
@@ -47,11 +48,11 @@ def version_tuple(version):
     Should be returned in the form: (major, minor, release).
     """
     if isinstance(version, str):
-        return tuple(version.split('.'))
+        return tuple(int(x) for x in version.split('.'))
     elif isinstance(version, tuple):
         return version
     else:
-        raise Exception("Invalid version: %s" % version)
+        raise ValueError("Invalid version: %s" % version)
 
 
 def version_str(version):
@@ -62,18 +63,24 @@ def version_str(version):
     if isinstance(version, str):
         return version
     elif isinstance(version, tuple):
-        return '.'.join([str(x) for x in version])
+        return '.'.join([str(int(x)) for x in version])
     else:
-        raise Exception("Invalid version: %s" % version)
+        raise ValueError("Invalid version: %s" % version)
 
 
 def generate_base_url(host, protocol=None, port=None):
-    matches = re.match(r'^(https?)?(://)?([^/:]+)(:?)(\d+)?', host)
-    (derived_proto, _, derived_host, _, derived_port) = matches.groups()
+    matches = re.match(r'^(([^:]+)://)?([^/:]+)(:([^/]+))?', host)
+    (_, derived_proto, derived_host, _, derived_port) = matches.groups()
     if derived_proto is None:
         derived_proto = protocol or 'http'
+    if derived_proto not in DEFAULT_PORTS:
+        raise ValueError()
+
     if derived_port is None:
         derived_port = port or DEFAULT_PORTS[derived_proto]
+
+    derived_port = int(derived_port)
+
     url_params = {
         'protocol': derived_proto,
         'host': derived_host,
