@@ -12,6 +12,11 @@
 
 import re
 
+DEFAULT_PORTS = {
+    'http': 80,
+    'https': 443,
+}
+
 
 def normalize_underscore_case(name):
 	"""Normalize an underscore-separated descriptor to something more readable.
@@ -68,7 +73,7 @@ def generate_base_url(host, protocol=None, port=None):
     if derived_proto is None:
         derived_proto = protocol or 'http'
     if derived_port is None:
-        derived_port = port or 8080
+        derived_port = port or DEFAULT_PORTS[derived_proto]
     url_params = {
         'protocol': derived_proto,
         'host': derived_host,
