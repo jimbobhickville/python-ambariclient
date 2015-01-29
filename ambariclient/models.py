@@ -125,7 +125,7 @@ class Task(base.QueryableModel):
     primary_key = 'id'
     fields = ('id', 'cluster_name', 'host_name', 'request_id', 'exit_code', 'stdout',
               'stderr', 'status', 'attempt_cnt', 'command', 'role', 'start_time',
-              'stage_id')
+              'stage_id', 'end_time')
 
 
 class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
