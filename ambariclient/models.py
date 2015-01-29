@@ -126,7 +126,7 @@ class Task(base.QueryableModel):
     fields = ('id', 'cluster_name', 'host_name', 'request_id', 'exit_code', 'stdout',
               'stderr', 'status', 'attempt_cnt', 'command', 'role', 'start_time',
               'stage_id', 'end_time', 'error_log', 'output_log', 'command_detail',
-              'structured_out')
+              'structured_out', 'custom_command_name')
 
 
 class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
@@ -170,6 +170,11 @@ class Component(base.QueryableModel):
         primary 'component_name' key for no apparent reason.
         """
         return { 'name': self.component_name }
+
+
+class ClusterServerComponent(Component):
+    fields = ('cluster_name', 'component_name', 'service_name', 'category',
+              'installed_count', 'started_count', 'total_count')
 
 
 class HostComponentCollection(base.QueryableModelCollection):
@@ -231,7 +236,8 @@ class HostComponent(Component):
     data_key = 'HostRoles'
     fields = ('cluster_name', 'component_name', 'desired_stack_id',
               'desired_state', 'host_name', 'maintenance_state', 'service_name',
-              'stack_id', 'stale_configs', 'state', 'actual_configs')
+              'stack_id', 'stale_configs', 'state', 'actual_configs',
+              'desired_admin_state')
 
     def install(self):
         """Installs this component on the host in question."""
@@ -455,8 +461,11 @@ class Service(base.QueryableModel):
     data_key = 'ServiceInfo'
     primary_key = 'service_name'
     fields = ('service_name', 'cluster_name', 'maintenance_state', 'state')
+
+
+class ClusterService(Service):
     relationships = {
-        'components': Component,
+        'components': ClusterServerComponent,
     }
 
 
@@ -528,7 +537,7 @@ class Cluster(base.QueryableModel):
     relationships = {
         'hosts': ClusterHost,
         'requests': Request,
-        'services': Service,
+        'services': ClusterService,
         'configurations': Configuration,
 # the workflows API doesn't appear to do anything yet
 #        'workflows': Workflow,
