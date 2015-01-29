@@ -177,14 +177,14 @@ class QueryableModelCollection(ModelCollection):
         super(QueryableModelCollection, self).__init__(*args, **kwargs)
 
     def __call__(self, *args):
-        items = []
         if len(args) == 1:
             if isinstance(args[0], list):
                 # allow for passing in a list of ids and filtering the set
                 items = args[0]
             else:
-                return self.model_class(self, href='/'.join([self.url, args[0]]),
-                                        data={self.model_class.primary_key: args[0]})
+                identifier = str(args[0])
+                return self.model_class(self, href='/'.join([self.url, identifier]),
+                                        data={self.model_class.primary_key: identifier})
         else:
             items = args
 
