@@ -125,7 +125,8 @@ class Task(base.QueryableModel):
     primary_key = 'id'
     fields = ('id', 'cluster_name', 'host_name', 'request_id', 'exit_code', 'stdout',
               'stderr', 'status', 'attempt_cnt', 'command', 'role', 'start_time',
-              'stage_id', 'end_time')
+              'stage_id', 'end_time', 'error_log', 'output_log', 'command_detail',
+              'structured_out')
 
 
 class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
@@ -133,7 +134,10 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
     data_key = 'Requests'
     primary_key = 'id'
     fields = ('id', 'request_context', 'status', 'request_status', 'progress_percent',
-              'queued_task_count', 'task_count', 'completed_task_count', 'type')
+              'queued_task_count', 'task_count', 'completed_task_count', 'type',
+              'operation_level', 'exclusive', 'aborted_task_count', 'create_time',
+              'end_time', 'failed_task_count', 'inputs', 'request_schedule',
+              'resource_filters', 'start_time', 'timed_out_task_count')
     relationships = {
         'tasks': Task,
     }
