@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import argparse
 import functools
 import json
 import logging
@@ -68,6 +69,45 @@ def reference(model_class=None, stack=None):
             reference(model_class=rel_model_class, stack=new_stack)
 
 
+def get_default_config():
+    return {
+        "host": "http://c6401.ambari.apache.org:8080",
+        "username": "admin",
+        "password": "admin"
+    }
+
+
+def parse_config_file():
+    config_path = os.path.expanduser('~/.ambari')
+    if os.path.isfile(config_path):
+        with open(config_path, 'r') as config_file:
+            return json.load(config_file)
+    return {}
+
+
+def parse_cli_opts():
+    args = os.environ.get('AMBARI_SHELL_ARGS')
+    if args:
+        parser = argparse.ArgumentParser(prog='ambari-shell')
+        parser.add_argument('--host',
+                           help='hostname for the ambari server '
+                                '(i.e. ambari.apache.org or http://ambari.apache.org:8080)')
+        parser.add_argument('--port', type=int,
+                           help='port for the ambari server '
+                                '(can be included in the host)')
+        parser.add_argument('--protocol', choices=['http', 'https'],
+                           help='protocol for the ambari server '
+                                '(can be included in the host)')
+        parser.add_argument('--username',
+                           help='username for the ambari server')
+        parser.add_argument('--password',
+                           help='password for the ambari server')
+        opts = vars(parser.parse_args(args.split()))
+        return {x: opts[x] for x in opts if opts[x] is not None}
+
+    return {}
+
+
 def log(level):
     logging.getLogger().setLevel(level)
 
@@ -89,16 +129,9 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     events.subscribe(models.Bootstrap, 'wait', bootstrap_progress, events.states.PROGRESS)
     events.subscribe(models.Bootstrap, 'wait', bootstrap_done, events.states.FINISHED)
 
-    config = {
-        "host": "http://c6401.ambari.apache.org:8080",
-        "username": "admin",
-        "password": "admin"
-    }
-
-    config_path = os.path.expanduser('~/.ambari')
-    if os.path.isfile(config_path):
-        with open(config_path, 'r') as config_file:
-            config.update(json.load(config_file))
+    config = get_default_config()
+    config.update(parse_config_file())
+    config.update(parse_cli_opts())
 
     ambari = Ambari(**config)
 

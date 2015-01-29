@@ -2,4 +2,5 @@
 
 # is there a better way to find the path to the shell?
 export PYTHONSTARTUP=`python -c "from ambariclient import shell; print shell.__file__"`
+export AMBARI_SHELL_ARGS=$*
 python
