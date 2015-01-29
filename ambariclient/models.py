@@ -178,55 +178,76 @@ class ClusterServerComponent(Component):
 
 
 class HostComponentCollection(base.QueryableModelCollection):
+    @property
+    def _server_components(self):
+        """Client components can't be stopped or started, so we need to filter them out"""
+        server_components = []
+        for component in self:
+            service = component.cluster.services(component.service_name)
+            if service.components(component.component_name).category != 'CLIENT':
+                server_components.append(component)
+
+        return server_components
+
     def install(self):
         """Install all of the components associated with this host."""
-        self.load(self.client.put(self.url, data={
-            "RequestInfo": {
-                "context" :"Install All Components",
-                "operation_level": {
-                    "level": "HOST",
-                    "cluster_name": self.parent.cluster_name,
-                    "host_name": self.parent.host_name,
+        components = [x.component_name for x in self if x.state in ('INIT', 'UNINSTALLED')]
+        if components:
+            self.load(self.client.put(self.url, data={
+                "RequestInfo": {
+                    "context" :"Install All Host Components",
+                    "operation_level": {
+                        "level": "HOST",
+                        "cluster_name": self.parent.cluster_name,
+                        "host_name": self.parent.host_name,
+                    },
+                    "query": "HostRoles/component_name.in({0})".format(','.join(components)),
                 },
-            },
-            "Body": {
-                "HostRoles": {"state": "INSTALLED"},
-            },
-        }))
+                "Body": {
+                    "HostRoles": {"state": "INSTALLED"},
+                },
+            }))
         return self
 
     def start(self):
         """Start all of the components associated with this host."""
-        self.load(self.client.put(self.url, data={
-            "RequestInfo": {
-                "context" :"Start All Components",
-                "operation_level": {
-                    "level": "HOST",
-                    "cluster_name": self.parent.cluster_name,
-                    "host_name": self.parent.host_name,
+        components = [x.component_name for x in self._server_components
+                                           if x.state in ('INSTALLED', 'STOPPED')]
+        if components:
+            self.load(self.client.put(self.url, data={
+                "RequestInfo": {
+                    "context" :"Start All Host Components",
+                    "operation_level": {
+                        "level": "HOST",
+                        "cluster_name": self.parent.cluster_name,
+                        "host_name": self.parent.host_name,
+                    },
+                    "query": "HostRoles/component_name.in({0})".format(','.join(components)),
                 },
-            },
-            "Body": {
-                "HostRoles": {"state": "STARTED"},
-            },
-        }))
+                "Body": {
+                    "HostRoles": {"state": "STARTED"},
+                },
+            }))
         return self
 
     def stop(self):
         """Stop all of the components associated with this host."""
-        self.load(self.client.put(self.url, data={
-            "RequestInfo": {
-                "context" :"Stop All Components",
-                "operation_level": {
-                    "level": "HOST",
-                    "cluster_name": self.parent.cluster_name,
-                    "host_name": self.parent.host_name,
+        components = [x.component_name for x in self._server_components if x.state == 'STARTED']
+        if components:
+            self.load(self.client.put(self.url, data={
+                "RequestInfo": {
+                    "context" :"Stop All Host Components",
+                    "operation_level": {
+                        "level": "HOST",
+                        "cluster_name": self.parent.cluster_name,
+                        "host_name": self.parent.host_name,
+                    },
+                    "query": "HostRoles/component_name.in({0})".format(','.join(components)),
                 },
-            },
-            "Body": {
-                "HostRoles": {"state": "INSTALLED"},
-            },
-        }))
+                "Body": {
+                    "HostRoles": {"state": "INSTALLED"},
+                },
+            }))
         return self
 
 
@@ -277,22 +298,23 @@ class HostComponent(Component):
 
     def restart(self):
         """Restarts this component on its host, if already installed and started."""
-        self.load(self.client.post(self.cluster.requests.url, data={
-            "RequestInfo": {
-                "command": "RESTART",
-                "context": "Restart %s" % normalize_underscore_case(self.component_name),
-                "operation_level": {
-                    "level": "SERVICE",
-                    "cluster_name": self.cluster_name,
-                    "service_name": self.service_name,
+        if self.state in ('STARTED', 'STOPPED', 'UNKNOWN'):
+            self.load(self.client.post(self.cluster.requests.url, data={
+                "RequestInfo": {
+                    "command": "RESTART",
+                    "context": "Restart %s" % normalize_underscore_case(self.component_name),
+                    "operation_level": {
+                        "level": "SERVICE",
+                        "cluster_name": self.cluster_name,
+                        "service_name": self.service_name,
+                    },
                 },
-            },
-            "Requests/resource_filters": [{
-                "service_name": self.service_name,
-                "component_name": self.component_name,
-                "hosts": self.host_name,
-            }],
-        }))
+                "Requests/resource_filters": [{
+                    "service_name": self.service_name,
+                    "component_name": self.component_name,
+                    "hosts": self.host_name,
+                }],
+            }))
         return self
 
 
