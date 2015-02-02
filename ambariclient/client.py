@@ -156,8 +156,8 @@ class HttpClient(object):
         if len(response.text) > 0:
             if response.headers.get('content-type') != 'application/json':
                 # Log bad methods so we can report them
-                LOG.info("Wrong response content-type for %s %s: %s", method,
-                        url, response.headers.get('content-type'))
+                LOG.debug("Wrong response content-type for %s %s: %s", method,
+                          url, response.headers.get('content-type'))
             return response.json()
 
         return {}
