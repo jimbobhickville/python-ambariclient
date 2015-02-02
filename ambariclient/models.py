@@ -419,7 +419,10 @@ class ClusterHost(Host):
 
     def load(self, response):
         if 'alerts' in response:
-            response['alerts'] = response['alerts']['detail']
+            if 'detail' in response['alerts']:
+                response['alerts'] = response['alerts']['detail']
+            else:
+                del response['alerts']
         return super(ClusterHost, self).load(response)
 
     def create(self, *args, **kwargs):
