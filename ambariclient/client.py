@@ -148,7 +148,7 @@ class HttpClient(object):
 
         if response.headers.get('content-length') is None:
             # Log bad methods so we can report them
-            LOG.info("Missing content-length for %s %s: %s", method,
+            LOG.debug("Missing content-length for %s %s: %s", method,
                      url, response.headers.get('content-type'))
 
         # there is no consistent way to determine response type
