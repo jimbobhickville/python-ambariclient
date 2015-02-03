@@ -552,6 +552,14 @@ class StackConfigurationList(Configuration):
         return { 'files': [x.to_dict() for x in self.files] }
 
 
+class UserPrivilege(base.QueryableModel):
+    path = 'privileges'
+    data_key = 'PrivilegeInfo'
+    primary_key = 'privilege_id'
+    fields = ('privilege_id', 'permission_name', 'principal_name',
+              'principal_type', 'type', 'user_name', 'cluster_name')
+
+
 class Cluster(base.QueryableModel):
     path = 'clusters'
     data_key = 'Clusters'
@@ -564,6 +572,7 @@ class Cluster(base.QueryableModel):
         'requests': Request,
         'services': ClusterService,
         'configurations': Configuration,
+        'privileges': UserPrivilege,
 # the workflows API doesn't appear to do anything yet
 #        'workflows': Workflow,
     }
@@ -668,14 +677,6 @@ class Stack(base.QueryableModel):
     relationships = {
         'versions': Version,
     }
-
-
-class UserPrivilege(base.QueryableModel):
-    path = 'privileges'
-    data_key = 'PrivilegeInfo'
-    primary_key = 'privilege_id'
-    fields = ('privilege_id', 'permission_name', 'principal_name',
-              'principal_type', 'type', 'user_name', 'cluster_name')
 
 
 class User(base.QueryableModel):
