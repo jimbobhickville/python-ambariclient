@@ -10,9 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import os
 import setuptools
 
-requires = open('requirements.txt').readlines()
+requirements_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                 'requirements.txt')
+with open(requirements_path) as requirements_file:
+    requires = requirements_file.readlines()
+
 setuptools.setup(
     name="python-ambariclient",
     version=0.3,
