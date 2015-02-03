@@ -15,7 +15,7 @@ import setuptools
 requires = open('requirements.txt').readlines()
 setuptools.setup(
     name="python-ambariclient",
-    version=0.2,
+    version=0.3,
     author="Rackspace",
     author_email="greg.hill@rackspace.com",
     description="Client library for Apache Ambari.",
