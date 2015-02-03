@@ -601,6 +601,36 @@ class Cluster(base.QueryableModel):
         }))
         return self.request
 
+    def decommission(self, service, hosts):
+        """Decommission slave components on a cluster.
+
+        This should make it safe to remove these hosts from the cluster.
+
+        :param service: The name of the service that the components are for
+        :param hosts: Comma separated list of hosts to decommission
+        :return: Current status of the request
+        """
+        components = {
+            'YARN': {'slave': 'NODEMANAGER', 'master': 'RESOURCEMANAGER'},
+            'HDFS': {'slave': 'DATANODE', 'master': 'NAMENODE'}
+        }
+        if service not in components:
+            raise ValueError("{0} is not a valid service to decommission".format(service))
+
+        slave = components[service]['slave']
+        self.load(self.client.post(self.cluster.requests.url, data={
+            "RequestInfo": {
+                "command": "DECOMMISSION",
+                "context": "Decommission {0}".format(normalize_underscore_case(slave)),
+                "parameters": {"slave_type": slave, "excluded_hosts": ','.join(hosts)},
+            },
+            "Requests/resource_filters": [{
+                "service_name": service,
+                "component_name": components[service]['master'],
+            }],
+        }))
+        return self
+
 
 class BlueprintHostGroup(base.DependentModel):
     fields = ('name', 'configurations', 'components')
