@@ -34,8 +34,9 @@ bin:
     >>>
 
 You can then just reference the 'ambari' variable as the client.  The defaults
-are those for the Ambari Quick Start setup, but you can override them by creating
-a JSON configuration file in $HOME/.ambari:
+are those for the Ambari Quick Start setup.  Username and password are defaulted
+to 'admin', and the host is defaulted to http://c6401.ambari.apache.org:8080 
+You can override them by creating a JSON configuration file in $HOME/.ambari:
 
     {
         "host": "my.ambari.server.com",
@@ -44,9 +45,14 @@ a JSON configuration file in $HOME/.ambari:
         "password": "my-password"
     }
 
-Those will then be used to create the client connection in the shell.  This
-configuration file will also be picked up by the integration tests for knowing
-where to point the tests.
+You can also pass in any of those options on the CLI:
+
+    ambari-shell --host http://my.ambari.server.com --username my-username --password my-password
+
+Or you can specify some in the config file and then override some using the CLI switches.
+
+To get more information about the switches, run `ambari-shell --help`
+
 
 Basic Examples
 -----------
