@@ -634,8 +634,8 @@ class Cluster(base.QueryableModel):
                 "command": "DECOMMISSION",
                 "context": "Decommission {0}".format(normalize_underscore_case(slave)),
                 "parameters": {"slave_type": slave, "excluded_hosts": ','.join(hosts)},
+                "operation_level": operation_level,
             },
-            "operation_level": operation_level,
             "Requests/resource_filters": [{
                 "service_name": service,
                 "component_name": components[service]['master'],
