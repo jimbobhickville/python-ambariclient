@@ -618,16 +618,24 @@ class Cluster(base.QueryableModel):
             raise ValueError("{0} is not a valid service to decommission".format(service))
 
         slave = components[service]['slave']
+        operation_level = {
+            "level": "CLUSTER",
+            "cluster_name": self.cluster_name
+        }
+        if len(hosts) == 1:
+            # if there's only one host, it requires a more specific operation_level
+            operation_level.update({
+                "level": "HOST_COMPONENT",
+                "host_name": hosts[0],
+                "service_name": service
+            })
         self.load(self.client.post(self.cluster.requests.url, data={
             "RequestInfo": {
                 "command": "DECOMMISSION",
                 "context": "Decommission {0}".format(normalize_underscore_case(slave)),
                 "parameters": {"slave_type": slave, "excluded_hosts": ','.join(hosts)},
             },
-            "operation_level": {
-              "level": "CLUSTER",
-              "cluster_name": self.cluster_name
-            },
+            "operation_level": operation_level,
             "Requests/resource_filters": [{
                 "service_name": service,
                 "component_name": components[service]['master'],
