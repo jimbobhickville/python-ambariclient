@@ -172,11 +172,6 @@ class Component(base.QueryableModel):
         return { 'name': self.component_name }
 
 
-class ClusterServerComponent(Component):
-    fields = ('cluster_name', 'component_name', 'service_name', 'category',
-              'installed_count', 'started_count', 'total_count')
-
-
 class HostComponentCollection(base.QueryableModelCollection):
     @property
     def _server_components(self):
@@ -316,6 +311,33 @@ class HostComponent(Component):
                 }],
             }))
         return self
+
+
+class ClusterServiceComponent(Component):
+    fields = ['cluster_name', 'component_name', 'service_name', 'category',
+              'installed_count', 'started_count', 'total_count']
+    extra_fields = {
+        # some components have additional component-specific fields added, because why not?
+        # this list might grow over time as more are discovered
+        'NAMENODE': ["CapacityRemaining", "CapacityTotal", "CapacityUsed", "DeadNodes",
+                     "DecomNodes", "HeapMemoryMax", "HeapMemoryUsed", "LiveNodes",
+                     "NonDfsUsedSpace", "NonHeapMemoryMax", "NonHeapMemoryUsed",
+                     "PercentRemaining", "PercentUsed", "Safemode", "StartTime", "TotalFiles",
+                     "UpgradeFinalized", "Version"],
+    }
+
+    relationships = {
+        'host_components': HostComponent,
+        'metrics': Metric,
+    }
+
+    def __getattr__(self, attr):
+        if ('component_name' in self._data and self._data['component_name'] in self.extra_fields
+                and attr in self.extra_fields[self._data['component_name']]):
+            if attr not in self._data:
+                self.inflate()
+            return self._data.get(attr)
+        return super(ClusterServiceComponent, self).__getattr__(attr)
 
 
 class Alert(base.DependentModel):
@@ -490,7 +512,7 @@ class Service(base.QueryableModel):
 
 class ClusterService(Service):
     relationships = {
-        'components': ClusterServerComponent,
+        'components': ClusterServiceComponent,
     }
 
 
