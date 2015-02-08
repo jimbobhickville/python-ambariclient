@@ -660,6 +660,13 @@ class Cluster(base.QueryableModel):
             raise ValueError("{0} is not a valid service to decommission".format(service))
 
         slave = components[service]['slave']
+        # filter off hosts where the slave component is already decommissioned
+        hosts = [host for host in hosts
+                 if self.hosts(host).components(slave).desired_admin_state != 'DECOMMISSIONED']
+        if len(hosts) == 0:
+            # no action required, all hosts are already decommissioned
+            return self
+
         operation_level = {
             "level": "CLUSTER",
             "cluster_name": self.cluster_name
