@@ -111,6 +111,26 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         return self
 
 
+class MetricCollection(base.DependentModelCollection):
+    def __call__(self, *args, **kwargs):
+        if len(args) == 1 and isinstance(args[0], dict):
+            metrics = []
+            for name in args[0]:
+                metrics.append({
+                    'name': name,
+                    'metrics': args[0][name],
+                })
+            return super(MetricCollection, self).__call__(metrics, **kwargs)
+
+        return super(MetricCollection, self).__call__(*args, **kwargs)
+
+
+class Metric(base.DependentModel):
+    collection_class = MetricCollection
+    fields = ('name', 'metrics')
+    primary_key = 'name'
+
+
 class Action(base.QueryableModel):
     path = 'actions'
     data_key = 'Actions'
