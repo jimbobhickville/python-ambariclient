@@ -316,8 +316,18 @@ class DependentModelCollection(ModelCollection):
         reloaded, it should create new collections for these resources.
         """
         items = []
-        if len(args) == 1 and isinstance(args[0], list):
-            items = args[0]
+        if len(args) == 1:
+            if isinstance(args[0], list):
+                items = args[0]
+            else:
+                matches = [x for x in self._models if x.identifier == args[0]]
+                if len(matches) == 1:
+                    return matches[0]
+                elif len(matches) > 1:
+                    raise ValueError("More than one {0} with {1} '{2}' found in "
+                                     "collection".format(self.model_class.__class__.__name__,
+                                                         self.model_class.primary_key, args[0]))
+                return None
 
         if len(items) > 0:
             self._models = []
