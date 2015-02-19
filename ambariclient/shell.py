@@ -19,7 +19,6 @@ import os
 from ambariclient.client import Ambari, ENTRY_POINTS
 from ambariclient import events, base, models, utils
 
-# TODO: override the logger level somehow
 logging.basicConfig(level=logging.CRITICAL)
 LOG = logging.getLogger(__name__)
 
@@ -73,7 +72,8 @@ def get_default_config():
     return {
         "host": "http://c6401.ambari.apache.org:8080",
         "username": "admin",
-        "password": "admin"
+        "password": "admin",
+        "logger": logging.CRITICAL,
     }
 
 
@@ -102,6 +102,8 @@ def parse_cli_opts():
                            help='username for the ambari server')
         parser.add_argument('--password',
                            help='password for the ambari server')
+        parser.add_argument('--logger',
+                           help='default logger level (default is CRITICAL)')
         opts = vars(parser.parse_args(args.split()))
         return {x: opts[x] for x in opts if opts[x] is not None}
 
@@ -132,6 +134,9 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     config = get_default_config()
     config.update(parse_config_file())
     config.update(parse_cli_opts())
+
+    if 'logger' in config:
+        log(config.pop('logger'))
 
     ambari = Ambari(**config)
 

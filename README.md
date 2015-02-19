@@ -51,6 +51,10 @@ You can also pass in any of those options on the CLI:
 
 Or you can specify some in the config file and then override some using the CLI switches.
 
+You can also override the logger level by passing it in or putting it in the config file:
+
+    ambari-shell --logger INFO
+
 To get more information about the switches, run `ambari-shell --help`
 
 
