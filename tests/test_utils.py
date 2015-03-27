@@ -24,7 +24,7 @@ from ambariclient import utils
     ('camelCaseTrio', 'Camel Case Trio'),
 ])
 def test_normalize_camel_case(original, expected):
-    assert(utils.normalize_camel_case(original) == expected)
+    assert utils.normalize_camel_case(original) == expected
 
 @pytest.mark.parametrize("original,expected", [
     ('underscore_case', 'Underscore Case'),
@@ -34,14 +34,14 @@ def test_normalize_camel_case(original, expected):
     ('underscore_case_trio', 'Underscore Case Trio'),
 ])
 def test_normalize_underscore_case(original, expected):
-    assert(utils.normalize_underscore_case(original) == expected)
+    assert utils.normalize_underscore_case(original) == expected
 
 @pytest.mark.parametrize("original,expected", [
     ('1.7.0', (1, 7, 0)),
     ((1, 7, 0), (1, 7, 0)),
 ])
 def test_version_tuple(original, expected):
-    assert(utils.version_tuple(original) == expected)
+    assert utils.version_tuple(original) == expected
 
 @pytest.mark.parametrize("original,exc", [
     ('One Seven Zero', ValueError),
@@ -54,7 +54,7 @@ def test_version_tuple_exc(original, exc):
     ('1.7.0', '1.7.0'),
 ])
 def test_version_str(original, expected):
-    assert(utils.version_str(original) == expected)
+    assert utils.version_str(original) == expected
 
 @pytest.mark.parametrize("original,exc", [
     (('One', 'Seven', 'Zero'), ValueError),
@@ -77,7 +77,7 @@ def test_version_str_exc(original, exc):
     ('www.example.com:9090', None, None, 'http://www.example.com:9090'),
 ])
 def test_generate_base_url(host, protocol, port, expected):
-    assert(utils.generate_base_url(host, protocol=protocol, port=port) == expected)
+    assert utils.generate_base_url(host, protocol=protocol, port=port) == expected
 
 @pytest.mark.parametrize("exc,host,protocol,port", [
     (ValueError, 'ftp://www.example.com', None, None),
