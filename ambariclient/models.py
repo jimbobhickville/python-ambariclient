@@ -668,13 +668,12 @@ class Cluster(base.QueryableModel):
             return self
 
         operation_level = {
-            "level": "CLUSTER",
+            "level": "HOST_COMPONENT",
             "cluster_name": self.cluster_name
         }
         if len(hosts) == 1:
             # if there's only one host, it requires a more specific operation_level
             operation_level.update({
-                "level": "HOST_COMPONENT",
                 "host_name": hosts[0],
                 "service_name": service
             })
