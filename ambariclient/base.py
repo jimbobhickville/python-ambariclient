@@ -125,6 +125,7 @@ class ModelCollection(object):
         return self
 
     def next(self):
+        self.inflate()
         if self._iter_marker >= len(self._models):
             raise StopIteration
         model = self._models[self._iter_marker]
