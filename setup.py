@@ -20,7 +20,7 @@ with open(requirements_path) as requirements_file:
 
 setuptools.setup(
     name="python-ambariclient",
-    version="0.4.1",
+    version="0.4.2",
     author="Rackspace",
     author_email="greg.hill@rackspace.com",
     description="Client library for Apache Ambari.",
