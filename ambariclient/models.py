@@ -594,7 +594,7 @@ class StackConfigurationList(Configuration):
         return { 'files': [x.to_dict() for x in self.files] }
 
 
-class UserPrivilege(base.QueryableModel):
+class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
     path = 'privileges'
     data_key = 'PrivilegeInfo'
     primary_key = 'privilege_id'
