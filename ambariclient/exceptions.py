@@ -43,7 +43,7 @@ class Timeout(Exception):
         self.message = message or self.__class__.message
 
     def __str__(self):
-        return "Timed out after %d seconds: %s" % (self.timeout, self.message)
+        return "Timed out after %s seconds: %s" % (self.timeout, self.message)
 
 
 class Failed(Exception):
@@ -78,7 +78,7 @@ class HttpError(Exception):
         self.retry_after = retry_after
 
     def __str__(self):
-        return "HTTP request failed for %s %s: %s %d: %s" % (self.method,
+        return "HTTP request failed for %s %s: %s %s: %s" % (self.method,
             self.url, self.message, self.code, self.details)
 
 
