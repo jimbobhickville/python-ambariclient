@@ -58,7 +58,8 @@ class Ambari(object):
 
     """
     def __init__(self, host, port=None, username=None, password=None,
-                 identifier=None, protocol=None, validate_ssl=True, max_retries=5):
+                 identifier=None, protocol=None, validate_ssl=True,
+                 timeout=10, max_retries=5):
 
         self.base_url = utils.generate_base_url(host, port=port, protocol=protocol)
 
@@ -67,7 +68,8 @@ class Ambari(object):
 
         self.client = HttpClient(host=self.base_url, username=username,
                                  password=password, identifier=identifier,
-                                 validate_ssl=validate_ssl, max_retries=max_retries)
+                                 validate_ssl=validate_ssl, timeout=timeout,
+                                 max_retries=max_retries)
         self._version = None
 
     # TODO: make this check automatic at some point
@@ -112,12 +114,13 @@ class HttpClient(object):
     cases do exist either due to Ambari bugs or other mitigating circumstances.
     """
     def __init__(self, host, username, password, identifier, validate_ssl=True,
-                 max_retries=5):
+                 timeout=10, max_retries=5):
 
         self.request_params = {
             'headers': {'X-Requested-By': identifier},
             'auth': (username, password),
             'verify': validate_ssl,
+            'timeout': timeout,
         }
         # automatically retry requests on connection errors
         self.session = requests.Session()
