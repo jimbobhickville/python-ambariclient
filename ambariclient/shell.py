@@ -111,6 +111,7 @@ def parse_cli_opts():
 
 
 def log(level):
+    print "Logging level set to %s" % level
     logging.getLogger().setLevel(level)
 
 
