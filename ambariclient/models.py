@@ -14,8 +14,8 @@
 Defines all the model classes for the various parts of the API.
 """
 
-from datetime import datetime, timedelta
 import logging
+import os
 import time
 
 from ambariclient import base, exceptions, events
@@ -60,14 +60,25 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         # we always want the verbose response here
         kwargs['verbose'] = True
 
+        if 'user' not in kwargs:
+            kwargs['user'] = 'root'
+
+        if self.client.version >= (2,0):
+            if 'userRunAs' not in kwargs:
+                kwargs['userRunAs'] = 'root'
+
         if 'ssh_key_path' in kwargs:
-            with open(kwargs.pop('ssh_key_path')) as f:
-                kwargs['sshKey'] = f.read()
+            ssh_key_path = os.path.expanduser(kwargs.pop('ssh_key_path'))
+            with open(ssh_key_path) as ssh_key_file:
+                kwargs['sshKey'] = ssh_key_file.read()
+
+        if 'sshKey' not in kwargs:
+            raise exceptions.BadRequest("You must pass in a private ssh key to bootstrap hosts")
 
         data = self._generate_input_dict(**kwargs)
         self.load(self.client.post(self.url,
-                             content_type="application/json",
-                             data=data))
+                                   content_type="application/json",
+                                   data=data))
         # this special case morphs the object URL after creation since we don't
         # know the requestId ahead of time
         self._hosts = kwargs['hosts']
