@@ -15,6 +15,7 @@ Defines all the model classes for the various parts of the API.
 """
 
 import logging
+import json
 import os
 import time
 
@@ -471,7 +472,57 @@ class HostMaintenance(object):
         return self.host
 
 
+class ClusterHosts(base.QueryableModelCollection):
+    def create_many(self, hosts):
+        """Add multiple hosts to a cluster in one call.
+
+        For Ambari 2.0+, this uses the new 'add hosts to host_group' feature. For older versions
+        of Ambari, we attempt to mimic the functionality in the client as much as possible by
+        loading the blueprint and figuring out what all components need to be installed and
+        adding them to the host.  Unfortunately, there's no easy way to mimic the automatic
+        'install and start' phase, so you'll have to manually do that in your code.
+
+        Ambari 1.7.0:
+            cluster.hosts.create_many([...])
+            for host in cluster.hosts(new_hostname):
+                host.components.install().wait()
+                host.components.start().wait()
+
+        Ambari 2.0+:
+            cluster.hosts.create_many([...]).wait()
+
+        In either case, the hosts must all be registered with Ambari before adding them.  This
+        can be done using `Boostrap` or manually registering the Ambari agents on each host.
+
+        :param hosts: a list of dictionaries containing the keys `host_name`, `host_group`,
+            and `blueprint`:
+            {
+                'host_name': 'c6405.ambari.apache.org',
+                'host_group': 'my-hostgroup',
+                'blueprint': 'my-blueprint'
+            }
+        :return: `ClusterHosts` instance
+        """
+        if self.client.version < (2,0,0):
+            for host_info in hosts:
+                self.create(host_info.pop('host_name'), **host_info)
+        else:
+            # get the Request object
+            self.load(self.client.post(self.url, json=json.dumps(hosts)))
+            # rebuild the list with the new additions
+            self.refresh()
+
+        return self
+
+    def wait(self, **kwargs):
+        super(ClusterHosts, self).wait(**kwargs)
+        for host in self._models:
+            host.wait()
+
+
 class ClusterHost(Host):
+    collection_class = ClusterHosts
+
     relationships = {
         'components': HostComponent,
         'alerts': Alert,
@@ -486,28 +537,31 @@ class ClusterHost(Host):
         return super(ClusterHost, self).load(response)
 
     def create(self, *args, **kwargs):
-        if 'host_group' in kwargs:
+        if self.client.version < (2,0,0):
             host_group_name = kwargs.pop('host_group')
-        if 'blueprint' in kwargs:
             blueprint_name = kwargs.pop('blueprint')
-        super(ClusterHost, self).create(*args, **kwargs)
-        # the API doesn't have a way to just add a host to a host_group
-        # so we handle the logic here to make it easier on the user
-        if host_group_name and blueprint_name:
-            for host_group in self.client.blueprints(blueprint_name).host_groups:
-                if host_group.name == host_group_name:
-                    for component in host_group.components:
-                        url = self.parent.url + "?Hosts/host_name=%s" % self.host_name
-                        self.client.post(url, data={
-                            "host_components": [{
-                                "HostRoles": {
-                                    "component_name": component['name'],
-                                },
-                            }],
-                        })
-                    continue
+            super(ClusterHost, self).create(*args, **kwargs)
+            # the API doesn't have a way to just add a host to a host_group
+            # so we handle the logic here to make it easier on the user
+            if host_group_name and blueprint_name:
+                bp = self.client.blueprints(blueprint_name)
+                host_group = next(x for x in bp.host_groups if x.name == host_group_name)
+                for component in host_group.components:
+                    url = self.parent.url + "?Hosts/host_name=%s" % self.host_name
+                    self.client.post(url, data={
+                        "host_components": [{
+                            "HostRoles": {
+                                "component_name": component['name'],
+                            },
+                        }],
+                    })
 
-        return self
+            return self
+        else:
+            # 2.0.0 added the ability to add hosts to host_groups in the API, but the 'host_name'
+            # is part of the payload, not the URL
+            self.load(self.client.post(self.parent.url, data=kwargs))
+            self.refresh()
 
     @property
     def maintenance(self):
