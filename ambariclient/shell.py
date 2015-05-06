@@ -48,6 +48,14 @@ def bootstrap_done(bootstrap, **kwargs):
     print "Wait for Bootstrap Hosts %s: FINISHED\n" % (hostnames)
 
 
+def host_progress(host, **kwargs):
+    print "Wait for %s: %s/%s" % (host.host_name, host.host_status, host.host_state)
+
+
+def host_done(host, **kwargs):
+    print "Wait for %s: FINISHED\n" % host.host_name
+
+
 def reference(model_class=None, stack=None):
     if stack is None:
         stack = ['ambari']
@@ -131,6 +139,8 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     events.subscribe(models.Request, 'wait', request_done, events.states.FINISHED)
     events.subscribe(models.Bootstrap, 'wait', bootstrap_progress, events.states.PROGRESS)
     events.subscribe(models.Bootstrap, 'wait', bootstrap_done, events.states.FINISHED)
+    events.subscribe(models.Host, 'wait', host_progress, events.states.PROGRESS)
+    events.subscribe(models.Host, 'wait', host_done, events.states.FINISHED)
 
     config = get_default_config()
     config.update(parse_config_file())
