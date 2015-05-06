@@ -15,6 +15,8 @@ import functools
 import json
 import logging
 import os
+import sys
+import traceback
 
 from ambariclient.client import Ambari, ENTRY_POINTS
 from ambariclient import events, base, models, utils
@@ -153,5 +155,13 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
 
     print "\nAmbari client available as 'ambari'"
     print " - Ambari Server is %s" % ambari.base_url
-    print " - Ambari Version is %s\n" % utils.version_str(ambari.version)
+
+    try:
+        version = ambari.version
+    except Exception:
+        traceback.print_exc()
+        print "\nCould not connect to Ambari server - aborting!"
+        sys.exit(1)
+
+    print " - Ambari Version is %s\n" % utils.version_str(version)
     print "help() for help\n"
