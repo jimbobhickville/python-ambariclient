@@ -403,7 +403,14 @@ class Host(base.PollableMixin, base.QueryableModel):
     @property
     def is_finished(self):
         """Make sure the host is registered with Ambari."""
-        return True if self.host_status == 'HEALTHY' else False
+        if self.host_status == 'HEALTHY':
+            return True
+
+        # starting with 2.0.0, maintenance mode sets host_status to 'UNKNOWN'
+        if self.maintenance_state == 'ON' and self.host_status == 'UNKNOWN':
+            return True
+
+        return False
 
     def wait(self, **kwargs):
         # we lose the request checking from base.QueryableModel
