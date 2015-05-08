@@ -190,6 +190,14 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
         return self
 
 
+class AlertHistory(base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'alert_history'
+    data_key = 'AlertHistory'
+    fields = ('id', 'cluster_name', 'component_name', 'definition_id', 'definition_name',
+              'host_name', 'instance', 'label', 'service_name', 'state', 'text', 'timestamp')
+
+
 class Component(base.QueryableModel):
     path = 'components'
     data_key = 'ServiceComponentInfo'
@@ -372,7 +380,7 @@ class ClusterServiceComponent(Component):
         return super(ClusterServiceComponent, self).__getattr__(attr)
 
 
-class Alert(base.DependentModel):
+class HostAlert(base.DependentModel):
     fields = ("description", "host_name", "last_status", "last_status_time",
               "service_name", "status", "status_time", "output", "actual_status")
     primary_key = None
@@ -524,8 +532,9 @@ class ClusterHost(Host):
     collection_class = ClusterHosts
 
     relationships = {
+        'alert_history': AlertHistory,
+        'alerts': HostAlert,
         'components': HostComponent,
-        'alerts': Alert,
     }
 
     def load(self, response):
@@ -604,6 +613,7 @@ class Service(base.QueryableModel):
 
 class ClusterService(Service):
     relationships = {
+        'alert_history': AlertHistory,
         'components': ClusterServiceComponent,
     }
 
@@ -674,6 +684,38 @@ class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
               'principal_type', 'type', 'user_name', 'cluster_name')
 
 
+class ClusterAlert(base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'alerts'
+    data_key = 'Alert'
+    fields = ('id', 'cluster_name', 'component_name', 'definition_id', 'definition_name',
+              'host_name', 'instance', 'label', 'latest_timestamp', 'maintenance_state',
+              'original_timestamp', 'scope', 'service_name', 'state', 'text')
+
+
+class ClusterAlertDefinition(base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'alert_definitions'
+    data_key = 'AlertDefinition'
+    fields = ('id', 'cluster_name', 'component_name', 'description', 'enabled', 'ignore_host',
+              'interval', 'label', 'name', 'scope', 'service_name', 'source')
+
+
+class ClusterAlertGroup(base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'alert_groups'
+    data_key = 'AlertGroup'
+    fields = ('id', 'cluster_name', 'default', 'definition', 'name', 'targets')
+
+
+class ClusterAlertNotice(base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'alert_notices'
+    data_key = 'AlertNotice'
+    fields = ('id', 'cluster_name', 'history_id', 'notification_state', 'service_name',
+              'target_id', 'target_name', 'uuid')
+
+
 class Cluster(base.QueryableModel):
     path = 'clusters'
     data_key = 'Clusters'
@@ -682,6 +724,11 @@ class Cluster(base.QueryableModel):
               'total_hosts', 'version', 'desired_configs',
               'desired_service_config_versions')
     relationships = {
+        'alerts': ClusterAlert,
+        'alert_definitions': ClusterAlertDefinition,
+        'alert_groups': ClusterAlertGroup,
+        'alert_history': AlertHistory,
+        'alert_notices': ClusterAlertNotice,
         'hosts': ClusterHost,
         'requests': Request,
         'services': ClusterService,
@@ -919,3 +966,9 @@ class RootService(Service):
         'components': RootServiceComponent,
     }
 
+
+class AlertTarget(base.QueryableModel, base.GeneratedIdentifierMixin):
+    min_version = (2,0,0)
+    path = 'alert_targets'
+    data_key = 'AlertTarget'
+    fields = ('name', 'description', 'notification_type', 'global', 'properties', 'alert_states')

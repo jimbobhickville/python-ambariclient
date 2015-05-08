@@ -24,6 +24,7 @@ LOG = logging.getLogger(__name__)
 # this defines where the Ambari client delegates to for actual logic
 ENTRY_POINTS = {
     'actions': models.Action,
+    'alert_targets': models.AlertTarget,
     'blueprints': models.Blueprint,
     'bootstrap': models.Bootstrap,
     'clusters': models.Cluster,
