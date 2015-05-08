@@ -18,9 +18,11 @@ from datetime import datetime, timedelta
 import logging
 import time
 
-from ambariclient import events, exceptions
+from ambariclient import events, exceptions, utils
 
 LOG = logging.getLogger(__name__)
+
+OLDEST_SUPPORTED_VERSION = (1, 7, 0)
 
 
 class PollableMixin(object):
@@ -176,6 +178,7 @@ class QueryableModelCollection(ModelCollection):
     def __init__(self, *args, **kwargs):
         self.request = None
         super(QueryableModelCollection, self).__init__(*args, **kwargs)
+        self.check_version()
 
     def __call__(self, *args):
         if len(args) == 1:
@@ -292,6 +295,15 @@ class QueryableModelCollection(ModelCollection):
             self.request = None
         return self.inflate()
 
+    def check_version(self):
+        if (self.model_class.min_version > OLDEST_SUPPORTED_VERSION
+                and self.client.version < self.model_class.min_version):
+            min_version = utils.version_str(self.model_class.min_version)
+            curr_version = utils.version_str(self.client.version)
+            raise exceptions.ClientError(message="Cannot access %s in version %s, it was added in "
+                                                 "version %s" % (self.url, curr_version,
+                                                                 min_version))
+
 
 class DependentModelCollection(ModelCollection):
     """A collection of DependentModel objects.
@@ -367,6 +379,7 @@ class Model(object):
     primary_key = None
     fields = []
     relationships = {}
+    min_version = OLDEST_SUPPORTED_VERSION
 
     def __init__(self, parent, data=None):
         self._data = data if data is not None else {}

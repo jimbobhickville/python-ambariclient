@@ -35,8 +35,6 @@ ENTRY_POINTS = {
     'views': models.View,
 }
 
-OLDEST_SUPPORTED_VERSION = (1, 7, 0)
-
 # TODO: flesh out version handling, this is weaksauce
 # TODO: Sphinx docs
 class Ambari(object):
@@ -72,13 +70,12 @@ class Ambari(object):
                                  max_retries=max_retries)
         self._version = None
 
-    # TODO: make this check automatic at some point
     def check_version(self):
-        if self.version < OLDEST_SUPPORTED_VERSION:
+        if self.version < base.OLDEST_SUPPORTED_VERSION:
             raise exceptions.ClientError(
                 "Version %s unsupported, must be %s or higher"
                 % (utils.version_str(self.version),
-                   utils.version_str(OLDEST_SUPPORTED_VERSION)))
+                   utils.version_str(base.OLDEST_SUPPORTED_VERSION)))
         return
 
     @property
