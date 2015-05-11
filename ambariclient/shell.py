@@ -17,6 +17,7 @@ import logging
 import os
 import sys
 import traceback
+from IPython.terminal.embed import InteractiveShellEmbed
 
 from ambariclient.client import Ambari, ENTRY_POINTS
 from ambariclient import events, base, models, utils
@@ -28,8 +29,8 @@ LOG = logging.getLogger(__name__)
 def model_event(event, event_state, obj, **kwargs):
     line_end = "\n" if event_state == events.states.FINISHED else ""
     print "%s %s '%s': %s%s" % (utils.normalize_underscore_case(event),
-                           utils.normalize_camel_case(obj.__class__.__name__),
-                           obj.identifier, event_state, line_end)
+                                utils.normalize_camel_case(obj.__class__.__name__),
+                                obj.identifier, event_state, line_end)
 
 
 def request_progress(request, **kwargs):
@@ -125,12 +126,6 @@ def log(level):
     logging.getLogger().setLevel(level)
 
 
-def help():
-    print "Ambari Shell Help"
-    print " - log(new_level) will reset the logger level"
-    print " - reference() will show you all available client method chains"
-
-
 if os.environ.get('PYTHONSTARTUP', '') == __file__:
     for event in ['create', 'update', 'delete']:
         for event_state in [events.states.STARTED, events.states.FINISHED]:
@@ -153,9 +148,6 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
 
     ambari = Ambari(**config)
 
-    print "\nAmbari client available as 'ambari'"
-    print " - Ambari Server is %s" % ambari.base_url
-
     try:
         version = ambari.version
     except Exception:
@@ -163,5 +155,14 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
         print "\nCould not connect to Ambari server - aborting!"
         sys.exit(1)
 
-    print " - Ambari Version is %s\n" % utils.version_str(version)
-    print "help() for help\n"
+
+    shell_help = "\n".join([
+        "Ambari client available as 'ambari'",
+        " - Ambari Server is %s" % ambari.base_url,
+        " - Ambari Version is %s\n" % utils.version_str(version),
+        " - log(new_level) will reset the logger level",
+        " - ambari_ref() will show you all available client method chains",
+    ])
+    shell = InteractiveShellEmbed(user_ns={'ambari': ambari, 'log': log, 'ambari_ref': reference})
+    shell(shell_help)
+    sys.exit(0)

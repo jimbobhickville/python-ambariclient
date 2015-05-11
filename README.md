@@ -19,23 +19,43 @@ Ambari Shell
 -----------
 
 The Ambari Shell will automatically set up the ambari client for you and let you
-play around with the API to learn the syntax.  To load it run the exectuable in
-bin:
+play around with the API to learn the syntax.  To load it run the ambari-shell executable.
+It should have been put in a system path for you automatically at install time, but if
+you're just playing with the source code, you can call 'bin/ambari-shell' directly.  It
+is based on the IPython shell, so for more comprehensive documentation of all the
+capabilities provided by that, refer to their documentation:
 
-    $ bin/ambari-shell
-    Python 2.7.2 (default, Oct 11 2012, 20:14:37)
-    [GCC 4.2.1 Compatible Apple Clang 4.0 (tags/Apple/clang-418.0.60)] on darwin
+http://ipython.org/ipython-doc/stable/interactive/index.html
+
+
+    Python 2.7.6 (default, Sep  9 2014, 15:04:36)
+    [GCC 4.2.1 Compatible Apple LLVM 6.0 (clang-600.0.39)] on darwin
     Type "help", "copyright", "credits" or "license" for more information.
-
+    Logging level set to 50
+    Python 2.7.6 (default, Sep  9 2014, 15:04:36)
+    Type "copyright", "credits" or "license" for more information.
+    
+    IPython 3.1.0 -- An enhanced Interactive Python.
+    ?         -> Introduction and overview of IPython's features.
+    %quickref -> Quick reference.
+    help      -> Python's own help system.
+    object?   -> Details about 'object', use 'object??' for extra details.
+    
+    
     Ambari client available as 'ambari'
-     - Ambari Server is c6401.ambari.apache.org:8080
-     - Ambari Version is 1.7.0
+     - Ambari Server is http://c6401.ambari.apache.org:8080
+     - Ambari Version is 2.0.0
+    
+     - log(new_level) will reset the logger level
+     - ambari_ref() will show you all available client method chains
+    
+    In [1]:
 
-    >>>
+You can then just reference the 'ambari' variable as the client.  The client is configurable via 
+command-line options and/or a config file.  The defaults are those for the Ambari Quick Start 
+setup.  Username and password are defaulted to 'admin', and the host is defaulted to 
+http://c6401.ambari.apache.org:8080 
 
-You can then just reference the 'ambari' variable as the client.  The defaults
-are those for the Ambari Quick Start setup.  Username and password are defaulted
-to 'admin', and the host is defaulted to http://c6401.ambari.apache.org:8080 
 You can override them by creating a JSON configuration file in $HOME/.ambari:
 
     {

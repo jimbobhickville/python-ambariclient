@@ -388,6 +388,9 @@ class Model(object):
         self._is_inflated = False
         self._relationship_cache = {}
 
+    def __dir__(self):
+        return self.__dict__.keys() + list(self.fields) + self.relationships.keys()
+
     @property
     def identifier(self):
         """A model's identifier is the value of its primary key."""
