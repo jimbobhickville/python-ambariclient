@@ -194,6 +194,7 @@ class AlertHistory(base.QueryableModel):
     min_version = (2,0,0)
     path = 'alert_history'
     data_key = 'AlertHistory'
+    primary_key = 'id'
     fields = ('id', 'cluster_name', 'component_name', 'definition_id', 'definition_name',
               'host_name', 'instance', 'label', 'service_name', 'state', 'text', 'timestamp')
 
@@ -688,6 +689,7 @@ class ClusterAlert(base.QueryableModel):
     min_version = (2,0,0)
     path = 'alerts'
     data_key = 'Alert'
+    primary_key = 'id'
     fields = ('id', 'cluster_name', 'component_name', 'definition_id', 'definition_name',
               'host_name', 'instance', 'label', 'latest_timestamp', 'maintenance_state',
               'original_timestamp', 'scope', 'service_name', 'state', 'text')
@@ -697,6 +699,7 @@ class ClusterAlertDefinition(base.QueryableModel):
     min_version = (2,0,0)
     path = 'alert_definitions'
     data_key = 'AlertDefinition'
+    primary_key = 'id'
     fields = ('id', 'cluster_name', 'component_name', 'description', 'enabled', 'ignore_host',
               'interval', 'label', 'name', 'scope', 'service_name', 'source')
 
@@ -705,6 +708,7 @@ class ClusterAlertGroup(base.QueryableModel):
     min_version = (2,0,0)
     path = 'alert_groups'
     data_key = 'AlertGroup'
+    primary_key = 'id'
     fields = ('id', 'cluster_name', 'default', 'definition', 'name', 'targets')
 
 
@@ -712,6 +716,7 @@ class ClusterAlertNotice(base.QueryableModel):
     min_version = (2,0,0)
     path = 'alert_notices'
     data_key = 'AlertNotice'
+    primary_key = 'id'
     fields = ('id', 'cluster_name', 'history_id', 'notification_state', 'service_name',
               'target_id', 'target_name', 'uuid')
 
@@ -971,4 +976,5 @@ class AlertTarget(base.QueryableModel, base.GeneratedIdentifierMixin):
     min_version = (2,0,0)
     path = 'alert_targets'
     data_key = 'AlertTarget'
+    primary_key = 'id'
     fields = ('name', 'description', 'notification_type', 'global', 'properties', 'alert_states')
