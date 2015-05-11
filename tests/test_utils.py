@@ -48,6 +48,7 @@ def test_version_tuple(original, expected):
 
 @pytest.mark.parametrize("original,exc", [
     ('One Seven Zero', ValueError),
+    ([1, 7, 0], ValueError),
 ])
 def test_version_tuple_exc(original, exc):
     pytest.raises(exc, utils.version_tuple, original)
@@ -63,6 +64,7 @@ def test_version_str(original, expected):
 
 @pytest.mark.parametrize("original,exc", [
     (('One', 'Seven', 'Zero'), ValueError),
+    ([1, 7, 0], ValueError),
 ])
 def test_version_str_exc(original, exc):
     pytest.raises(exc, utils.version_str, original)
