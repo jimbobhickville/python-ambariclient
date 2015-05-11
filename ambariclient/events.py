@@ -20,6 +20,7 @@ EVENT_HANDLERS = {}
 state_list = ['ANY', 'STARTED', 'FAILED', 'FINISHED', 'PROGRESS']
 states = namedtuple('EventStates', state_list)(*state_list)
 
+
 def evented(method):
     def replacement(self, *args, **kwargs):
         publish(self, method.__name__, states.STARTED)
@@ -97,4 +98,3 @@ def subscribe(obj, event, callback, event_state=None):
 
     EVENT_HANDLERS[event_key].append(callback)
     return
-

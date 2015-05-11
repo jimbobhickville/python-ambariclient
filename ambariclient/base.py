@@ -576,10 +576,8 @@ class QueryableModel(Model):
                 # catch infinite recursion when attempting to inflate
                 # an object that doesn't have enough data to inflate
                 msg = ("There is not enough data to inflate this object.  "
-                       "Need either an href: {} or a {}: {}").format(
-                          self._href, self.primary_key,
-                          self._data.get(self.primary_key)
-                      )
+                       "Need either an href: {} or a {}: {}")
+                msg = msg.format(self._href, self.primary_key, self._data.get(self.primary_key))
                 raise exceptions.ClientError(msg)
 
             self._is_inflating = True

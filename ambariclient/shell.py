@@ -101,20 +101,20 @@ def parse_cli_opts():
     if args:
         parser = argparse.ArgumentParser(prog='ambari-shell')
         parser.add_argument('--host',
-                           help='hostname for the ambari server '
-                                '(i.e. ambari.apache.org or http://ambari.apache.org:8080)')
+                            help='hostname for the ambari server '
+                                 '(i.e. ambari.apache.org or http://ambari.apache.org:8080)')
         parser.add_argument('--port', type=int,
-                           help='port for the ambari server '
-                                '(can be included in the host)')
+                            help='port for the ambari server '
+                                 '(can be included in the host)')
         parser.add_argument('--protocol', choices=['http', 'https'],
-                           help='protocol for the ambari server '
-                                '(can be included in the host)')
+                            help='protocol for the ambari server '
+                                 '(can be included in the host)')
         parser.add_argument('--username',
-                           help='username for the ambari server')
+                            help='username for the ambari server')
         parser.add_argument('--password',
-                           help='password for the ambari server')
+                            help='password for the ambari server')
         parser.add_argument('--logger',
-                           help='default logger level (default is CRITICAL)')
+                            help='default logger level (default is CRITICAL)')
         opts = vars(parser.parse_args(args.split()))
         return {x: opts[x] for x in opts if opts[x] is not None}
 
@@ -154,7 +154,6 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
         traceback.print_exc()
         print "\nCould not connect to Ambari server - aborting!"
         sys.exit(1)
-
 
     shell_help = "\n".join([
         "Ambari client available as 'ambari'",

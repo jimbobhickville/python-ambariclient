@@ -36,8 +36,7 @@ ENTRY_POINTS = {
     'views': models.View,
 }
 
-# TODO: flesh out version handling, this is weaksauce
-# TODO: Sphinx docs
+
 class Ambari(object):
     """The Ambari client
 
@@ -153,7 +152,7 @@ class HttpClient(object):
         if response.headers.get('content-length') is None:
             # Log bad methods so we can report them
             LOG.debug("Missing content-length for %s %s: %s", method,
-                     url, response.headers.get('content-type'))
+                      url, response.headers.get('content-type'))
 
         # there is no consistent way to determine response type
         # so assume json if it's not an empty string

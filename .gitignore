@@ -32,3 +32,4 @@ flycheck-*
 .idea
 
 .cache
+htmlcov

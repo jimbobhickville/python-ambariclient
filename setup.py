@@ -27,7 +27,7 @@ setuptools.setup(
     url="https://www.github.com/rackerlabs/python-ambariclient",
     packages=setuptools.find_packages(exclude=['tests', 'tests.*']),
     install_requires=requires,
-    include_package_data = True,
+    include_package_data=True,
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

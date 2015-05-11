@@ -79,8 +79,8 @@ class HttpError(Exception):
         self.retry_after = retry_after
 
     def __str__(self):
-        return "HTTP request failed for %s %s: %s %s: %s" % (self.method,
-            self.url, self.message, self.code, self.details)
+        params = (self.method, self.url, self.message, self.code, self.details)
+        return "HTTP request failed for %s %s: %s %s: %s" % params
 
 
 class BadRequest(HttpError):
@@ -168,6 +168,7 @@ class ServerUnavailable(HttpError):
 
 
 _status_to_exception_type = dict((c.code, c) for c in HttpError.__subclasses__())
+
 
 def handle_response(response):
     """

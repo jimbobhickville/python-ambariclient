@@ -19,16 +19,16 @@ DEFAULT_PORTS = {
 
 
 def normalize_underscore_case(name):
-	"""Normalize an underscore-separated descriptor to something more readable.
+    """Normalize an underscore-separated descriptor to something more readable.
 
-	i.e. 'NAGIOS_SERVER' becomes 'Nagios Server', and 'host_components' becomes
+    i.e. 'NAGIOS_SERVER' becomes 'Nagios Server', and 'host_components' becomes
     'Host Components'
-	"""
-	normalized = name.lower()
-	normalized = re.sub('_(\w)',
+    """
+    normalized = name.lower()
+    normalized = re.sub('_(\w)',
                         lambda match: ' ' + match.group(1).upper(),
                         normalized)
-	return normalized[0].upper() + normalized[1:]
+    return normalized[0].upper() + normalized[1:]
 
 
 def normalize_camel_case(name):

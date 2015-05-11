@@ -108,7 +108,7 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         to ensure they are fully online before returning, because that's all a
         user should care about.
         """
-        super(Bootstrap, self).wait(**kwargs);
+        super(Bootstrap, self).wait(**kwargs)
         # make sure all the hosts are registered as well
         for host in self.hosts:
             host.wait()
@@ -231,7 +231,7 @@ class HostComponentCollection(base.QueryableModelCollection):
         if components:
             self.load(self.client.put(self.url, data={
                 "RequestInfo": {
-                    "context" :"Install All Host Components",
+                    "context": "Install All Host Components",
                     "operation_level": {
                         "level": "HOST",
                         "cluster_name": self.parent.cluster_name,
@@ -247,12 +247,13 @@ class HostComponentCollection(base.QueryableModelCollection):
 
     def start(self):
         """Start all of the components associated with this host."""
-        components = [x.component_name for x in self._server_components
-                                           if x.state in ('INSTALLED', 'STOPPED')]
+        components = [x.component_name
+                      for x in self._server_components
+                      if x.state in ('INSTALLED', 'STOPPED')]
         if components:
             self.load(self.client.put(self.url, data={
                 "RequestInfo": {
-                    "context" :"Start All Host Components",
+                    "context": "Start All Host Components",
                     "operation_level": {
                         "level": "HOST",
                         "cluster_name": self.parent.cluster_name,
@@ -272,7 +273,7 @@ class HostComponentCollection(base.QueryableModelCollection):
         if components:
             self.load(self.client.put(self.url, data={
                 "RequestInfo": {
-                    "context" :"Stop All Host Components",
+                    "context": "Stop All Host Components",
                     "operation_level": {
                         "level": "HOST",
                         "cluster_name": self.parent.cluster_name,
@@ -739,8 +740,8 @@ class Cluster(base.QueryableModel):
         'services': ClusterService,
         'configurations': Configuration,
         'privileges': UserPrivilege,
-# the workflows API doesn't appear to do anything yet
-#        'workflows': Workflow,
+        # the workflows API doesn't appear to do anything yet
+        # 'workflows': Workflow,
     }
 
     def execute_action(self, action, context, parameters=None, hosts=None):
