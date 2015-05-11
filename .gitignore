@@ -30,3 +30,5 @@ flycheck-*
 
 #pycharm
 .idea
+
+.cache

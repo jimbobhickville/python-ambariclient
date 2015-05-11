@@ -333,17 +333,8 @@ Testing
 -----------
 
 Since doing good unit tests for this library would require mocking pretty much
-the entire Ambari API, we didn't see a lot of benefit in that.  There will be
-some unit tests to cover some basics and make sure the collection and model
-classes behave as expected, but the majority of the testing is done via
-integration testing.  To run those tests, you'll need the 5 node Ambari Quick
-Start environment mentioned at the top of the article running, with ambari-server
-installed and runnning on c6401.  At that point, you can do a full suite of
-integration tests against the running Ambari installation:
-
-    $ tox -e integration
-
-For the unit tests, just run tox normally:
+the entire Ambari API, we didn't see a lot of benefit in that.  There are some basic unit tests
+that will be expanded upon over time, but most testing is currently done manually.
 
     $ tox -e py27
     $ tox -e py33
