@@ -109,6 +109,8 @@ def parse_cli_opts():
         parser.add_argument('--protocol', choices=['http', 'https'],
                             help='protocol for the ambari server '
                                  '(can be included in the host)')
+        parser.add_argument('--no-validate-ssl', action='store_const', const=True,
+                            help='disable ssl certificate validation')
         parser.add_argument('--username',
                             help='username for the ambari server')
         parser.add_argument('--password',
@@ -142,6 +144,8 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
     config = get_default_config()
     config.update(parse_config_file())
     config.update(parse_cli_opts())
+
+    config['validate_ssl'] = not config.pop('no_validate_ssl', False)
 
     if 'logger' in config:
         log(config.pop('logger'))
