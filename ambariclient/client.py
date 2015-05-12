@@ -135,11 +135,11 @@ class HttpClient(object):
 
         if content_type is not None:
             params['headers']['Content-type'] = content_type
-        LOG.debug("Request headers: %s" % params['headers'])
+        LOG.debug("Request headers: %s", params['headers'])
 
         if 'data' in params and isinstance(params['data'], dict):
             params['data'] = json.dumps(params['data'], cls=AmbariJsonEncoder)
-            LOG.debug("Request body: %s" % params['data'])
+            LOG.debug("Request body: %s", params['data'])
 
         response = requests_method(url, **params)
 
@@ -177,7 +177,7 @@ class AmbariJsonEncoder(json.JSONEncoder):
     This allows for passing in models and ModelCollections into related objects'
     create/update methods and having it handle the conversion automatically.
     """
-    def default(self, obj):
+    def default(self, obj):  # pylint: disable=method-hidden
         if isinstance(obj, base.ModelCollection):
             dicts = []
             for model in obj:
@@ -186,4 +186,4 @@ class AmbariJsonEncoder(json.JSONEncoder):
         elif isinstance(obj, base.Model):
             return obj.to_json_dict()
         # Let the base class default method raise the TypeError
-        return json.JSONEncoder.default(self, obj)
+        return super(AmbariJsonEncoder, self).default(obj)

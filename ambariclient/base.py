@@ -149,7 +149,7 @@ class ModelCollection(object):
         return
 
     @events.evented
-    def wait(self, **kwargs):
+    def wait(self, **kwargs):  # pylint: disable=unused-argument
         """Wait until the collection is loaded."""
         return self.inflate()
 
@@ -481,7 +481,7 @@ class Model(object):
         return { self.primary_key: self.identifier }
 
     @events.evented
-    def wait(self, **kwargs):
+    def wait(self, **kwargs):  # pylint: disable=unused-argument
         """Calling wait() on a model makes it wait until the object is in a valid state.
 
         So, for example, if you wait() on a cluster after creating it, it will

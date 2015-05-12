@@ -27,6 +27,7 @@ class ClientError(Exception):
 
     def __init__(self, message=None):
         self.message = message or self.__class__.message
+        super(ClientError, self).__init__()
 
     def __str__(self):
         return "Unexpected client-side error: %s" % self.message
@@ -41,6 +42,7 @@ class Timeout(Exception):
     def __init__(self, timeout, message=None):
         self.timeout = timeout
         self.message = message or self.__class__.message
+        super(Timeout, self).__init__()
 
     def __str__(self):
         return "Timed out after %s seconds: %s" % (self.timeout, self.message)
@@ -55,6 +57,7 @@ class Failed(Exception):
     def __init__(self, model, message=None):
         self.model = model
         self.message = message or self.__class__.message
+        super(Failed, self).__init__()
 
     def __str__(self):
         return "Failure detected for %s/%s: %s" % (self.model.__class__.__name__,
@@ -77,6 +80,7 @@ class HttpError(Exception):
         self.url = url
         self.method = method
         self.retry_after = retry_after
+        super(HttpError, self).__init__()
 
     def __str__(self):
         params = (self.method, self.url, self.message, self.code, self.details)
@@ -167,6 +171,7 @@ class ServerUnavailable(HttpError):
     message = "Service Unavailable"
 
 
+# pylint: disable=no-member
 _status_to_exception_type = dict((c.code, c) for c in HttpError.__subclasses__())
 
 

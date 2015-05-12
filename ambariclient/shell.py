@@ -27,6 +27,7 @@ LOG = logging.getLogger(__name__)
 
 
 def model_event(event, event_state, obj, **kwargs):
+    # pylint: disable=unused-argument
     line_end = "\n" if event_state == events.states.FINISHED else ""
     print "%s %s '%s': %s%s" % (utils.normalize_underscore_case(event),
                                 utils.normalize_camel_case(obj.__class__.__name__),
@@ -35,28 +36,34 @@ def model_event(event, event_state, obj, **kwargs):
 
 def request_progress(request, **kwargs):
     print "Wait for %s: %.2f%%" % (request.request_context, request.progress_percent)
+    # pylint: disable=unused-argument
 
 
 def request_done(request, **kwargs):
     print "Wait for %s: FINISHED\n" % (request.request_context)
+    # pylint: disable=unused-argument
 
 
 def bootstrap_progress(bootstrap, **kwargs):
+    # pylint: disable=unused-argument
     hostnames = [x.host_name for x in bootstrap.hosts]
     print "Wait for Bootstrap Hosts %s: %s" % (hostnames, bootstrap.status)
 
 
 def bootstrap_done(bootstrap, **kwargs):
+    # pylint: disable=unused-argument
     hostnames = [x.host_name for x in bootstrap.hosts]
     print "Wait for Bootstrap Hosts %s: FINISHED\n" % (hostnames)
 
 
 def host_progress(host, **kwargs):
     print "Wait for %s: %s/%s" % (host.host_name, host.host_status, host.host_state)
+    # pylint: disable=unused-argument
 
 
 def host_done(host, **kwargs):
     print "Wait for %s: FINISHED\n" % host.host_name
+    # pylint: disable=unused-argument
 
 
 def reference(model_class=None, stack=None):
@@ -129,10 +136,10 @@ def log(level):
 
 
 if os.environ.get('PYTHONSTARTUP', '') == __file__:
-    for event in ['create', 'update', 'delete']:
-        for event_state in [events.states.STARTED, events.states.FINISHED]:
-            callback = functools.partial(model_event, event, event_state)
-            events.subscribe(base.Model, event, callback, event_state)
+    for event_name in ['create', 'update', 'delete']:
+        for state in [events.states.STARTED, events.states.FINISHED]:
+            callback = functools.partial(model_event, event_name, state)
+            events.subscribe(base.Model, event_name, callback, state)
 
     events.subscribe(models.Request, 'wait', request_progress, events.states.PROGRESS)
     events.subscribe(models.Request, 'wait', request_done, events.states.FINISHED)
@@ -154,7 +161,7 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
 
     try:
         version = ambari.version
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         traceback.print_exc()
         print "\nCould not connect to Ambari server - aborting!"
         sys.exit(1)

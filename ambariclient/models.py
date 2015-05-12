@@ -56,6 +56,10 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
     primary_key = 'requestId'
     fields = ('status', 'requestId', 'message', 'hostsStatus')
 
+    def __init__(self, *args, **kwargs):
+        super(Bootstrap, self).__init__(*args, **kwargs)
+        self._hosts = []
+
     @events.evented
     def create(self, **kwargs):
         # we always want the verbose response here
@@ -117,9 +121,9 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
     def inflate(self):
         # the requestId isn't returned in the response body except on create
         # so keep track of it manually.
-        requestId = self._data.get('requestId')
+        request_id = self._data.get('requestId')
         super(Bootstrap, self).inflate()
-        self._data['requestId'] = requestId
+        self._data['requestId'] = request_id
         return self
 
 

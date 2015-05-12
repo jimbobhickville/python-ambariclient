@@ -25,7 +25,7 @@ def normalize_underscore_case(name):
     'Host Components'
     """
     normalized = name.lower()
-    normalized = re.sub('_(\w)',
+    normalized = re.sub(r'_(\w)',
                         lambda match: ' ' + match.group(1).upper(),
                         normalized)
     return normalized[0].upper() + normalized[1:]
