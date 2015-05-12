@@ -15,6 +15,7 @@ import functools
 import json
 import logging
 import os
+import six
 import sys
 import traceback
 from IPython.terminal.embed import InteractiveShellEmbed
@@ -29,41 +30,41 @@ LOG = logging.getLogger(__name__)
 def model_event(event, event_state, obj, **kwargs):
     # pylint: disable=unused-argument
     line_end = "\n" if event_state == events.states.FINISHED else ""
-    print "%s %s '%s': %s%s" % (utils.normalize_underscore_case(event),
-                                utils.normalize_camel_case(obj.__class__.__name__),
-                                obj.identifier, event_state, line_end)
+    six.print_("%s %s '%s': %s%s" % (utils.normalize_underscore_case(event),
+                                     utils.normalize_camel_case(obj.__class__.__name__),
+                                     obj.identifier, event_state, line_end))
 
 
 def request_progress(request, **kwargs):
-    print "Wait for %s: %.2f%%" % (request.request_context, request.progress_percent)
     # pylint: disable=unused-argument
+    six.print_("Wait for %s: %.2f%%" % (request.request_context, request.progress_percent))
 
 
 def request_done(request, **kwargs):
-    print "Wait for %s: FINISHED\n" % (request.request_context)
     # pylint: disable=unused-argument
+    six.print_("Wait for %s: FINISHED\n" % (request.request_context))
 
 
 def bootstrap_progress(bootstrap, **kwargs):
     # pylint: disable=unused-argument
     hostnames = [x.host_name for x in bootstrap.hosts]
-    print "Wait for Bootstrap Hosts %s: %s" % (hostnames, bootstrap.status)
+    six.print_("Wait for Bootstrap Hosts %s: %s" % (hostnames, bootstrap.status))
 
 
 def bootstrap_done(bootstrap, **kwargs):
     # pylint: disable=unused-argument
     hostnames = [x.host_name for x in bootstrap.hosts]
-    print "Wait for Bootstrap Hosts %s: FINISHED\n" % (hostnames)
+    six.print_("Wait for Bootstrap Hosts %s: FINISHED\n" % (hostnames))
 
 
 def host_progress(host, **kwargs):
-    print "Wait for %s: %s/%s" % (host.host_name, host.host_status, host.host_state)
     # pylint: disable=unused-argument
+    six.print_("Wait for %s: %s/%s" % (host.host_name, host.host_status, host.host_state))
 
 
 def host_done(host, **kwargs):
-    print "Wait for %s: FINISHED\n" % host.host_name
     # pylint: disable=unused-argument
+    six.print_("Wait for %s: FINISHED\n" % host.host_name)
 
 
 def reference(model_class=None, stack=None):
@@ -78,11 +79,11 @@ def reference(model_class=None, stack=None):
     for rel in sorted(relationships.keys()):
         new_stack = list(stack)
         new_stack.append(rel)
-        print '.'.join(new_stack)
+        six.print_('.'.join(new_stack))
         rel_model_class = relationships[rel]
         if rel_model_class.primary_key is not None:
             new_stack[-1] = "%s(%s)" % (new_stack[-1], rel_model_class.primary_key)
-            print '.'.join(new_stack)
+            six.print_('.'.join(new_stack))
             reference(model_class=rel_model_class, stack=new_stack)
 
 
@@ -125,13 +126,13 @@ def parse_cli_opts():
         parser.add_argument('--logger',
                             help='default logger level (default is CRITICAL)')
         opts = vars(parser.parse_args(args.split()))
-        return {x: opts[x] for x in opts if opts[x] is not None}
+        return dict((x, opts[x]) for x in opts if opts[x] is not None)
 
     return {}
 
 
 def log(level):
-    print "Logging level set to %s" % level
+    six.print_("Logging level set to %s" % level)
     logging.getLogger().setLevel(level)
 
 
@@ -163,7 +164,7 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
         version = ambari.version
     except Exception:  # pylint: disable=broad-except
         traceback.print_exc()
-        print "\nCould not connect to Ambari server - aborting!"
+        six.print_("\nCould not connect to Ambari server - aborting!")
         sys.exit(1)
 
     shell_help = "\n".join([
