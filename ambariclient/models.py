@@ -623,6 +623,39 @@ class ClusterService(Service):
         'components': ClusterServiceComponent,
     }
 
+    def restart(self, component_names=None):
+        """Restarts components of this service, if already installed and started."""
+
+        components = self.components
+        if component_names:
+            components = components(component_names)
+
+        resource_filters = []
+        for component in components:
+            hosts = [hc.host_name for hc in component.host_components]
+            if hosts:
+                resource_filters.append({
+                    "service_name": self.service_name,
+                    "component_name": component.component_name,
+                    "hosts": ','.join(hosts),
+                })
+
+        if resource_filters:
+            self.load(self.client.post(self.cluster.requests.url, data={
+                "RequestInfo": {
+                    "command": "RESTART",
+                    "context": "Restart all components for %s" % normalize_underscore_case(
+                        self.service_name),
+                    "operation_level": {
+                        "level": "SERVICE",
+                        "cluster_name": self.cluster_name,
+                        "service_name": self.service_name,
+                    },
+                },
+                "Requests/resource_filters": resource_filters,
+            }))
+        return self
+
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
