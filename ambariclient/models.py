@@ -385,6 +385,28 @@ class ClusterServiceComponent(Component):
             return self._data.get(attr)
         return super(ClusterServiceComponent, self).__getattr__(attr)
 
+    def restart(self):
+        """Restarts this component on its host, if already installed and started."""
+        hosts = [hc.host_name for hc in self.host_components]
+        if hosts:
+            self.load(self.client.post(self.cluster.requests.url, data={
+                "RequestInfo": {
+                    "command": "RESTART",
+                    "context": "Restart %s" % normalize_underscore_case(self.component_name),
+                    "operation_level": {
+                        "level": "SERVICE",
+                        "cluster_name": self.cluster_name,
+                        "service_name": self.service_name,
+                    },
+                },
+                "Requests/resource_filters": [{
+                    "service_name": self.service_name,
+                    "component_name": self.component_name,
+                    "hosts": ','.join(hosts)
+                }],
+            }))
+        return self
+
 
 class HostAlert(base.DependentModel):
     fields = ("description", "host_name", "last_status", "last_status_time",
