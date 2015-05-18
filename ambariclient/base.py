@@ -623,7 +623,7 @@ class QueryableModel(Model):
             if self.data_key and self.data_key in response:
                 self._data.update(response.pop(self.data_key))
                 # preload related object collections, if received
-                for rel in [x for x in self.relationships if x in response]:
+                for rel in [x for x in self.relationships if x in response and response[x]]:
                     rel_class = self.relationships[rel]
                     collection = rel_class.collection_class(
                         self.client, rel_class, parent=self
