@@ -176,9 +176,8 @@ class QueryableModelCollection(ModelCollection):
     when you act on the host objects it contains.
     """
     def __init__(self, *args, **kwargs):
-        self.request = None
         super(QueryableModelCollection, self).__init__(*args, **kwargs)
-        self.check_version()
+        self.request = None
 
     def __call__(self, *args):
         if len(args) == 1:
@@ -226,6 +225,7 @@ class QueryableModelCollection(ModelCollection):
     def inflate(self):
         """Load the collection from the server, if necessary."""
         if not self._is_inflated:
+            self.check_version()
             self.load(self.client.get(self.url))
 
         self._is_inflated = True
