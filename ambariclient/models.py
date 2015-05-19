@@ -884,7 +884,7 @@ class Cluster(base.QueryableModel):
 
 
 class BlueprintHostGroup(base.DependentModel):
-    fields = ('name', 'configurations', 'components')
+    fields = ('name', 'configurations', 'components', 'cardinality')
     primary_key = 'name'
 
 
