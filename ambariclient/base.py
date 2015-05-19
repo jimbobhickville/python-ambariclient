@@ -15,7 +15,9 @@ Defines all the base classes for response objects.
 """
 
 from datetime import datetime, timedelta
+import json
 import logging
+import six
 import time
 
 from ambariclient import events, exceptions, utils
@@ -178,8 +180,9 @@ class QueryableModelCollection(ModelCollection):
     def __init__(self, *args, **kwargs):
         super(QueryableModelCollection, self).__init__(*args, **kwargs)
         self.request = None
+        self._filter = {}
 
-    def __call__(self, *args):
+    def __call__(self, *args, **kwargs):
         if len(args) == 1:
             if isinstance(args[0], list):
                 # allow for passing in a list of ids and filtering the set
@@ -204,8 +207,18 @@ class QueryableModelCollection(ModelCollection):
                     model = self.model_class(self, href='/'.join([self.url, item]),
                                              data={self.model_class.primary_key: item})
                 self._models.append(model)
+            return self
 
-        # TODO - pagination support?  Other filters on collections?
+        self._is_inflated = False
+        self._filter = {}
+        self._models = []
+        if kwargs:
+            prefix = self.model_class.data_key
+            for (key, value) in kwargs.iteritems():
+                key = '/'.join([prefix, key])
+                if not isinstance(value, six.string_types):
+                    value = json.dumps(value)
+                self._filter[key] = value
 
         return self
 
@@ -226,7 +239,7 @@ class QueryableModelCollection(ModelCollection):
         """Load the collection from the server, if necessary."""
         if not self._is_inflated:
             self.check_version()
-            self.load(self.client.get(self.url))
+            self.load(self.client.get(self.url, params=self._filter))
 
         self._is_inflated = True
         return self
