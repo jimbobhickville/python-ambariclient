@@ -795,6 +795,7 @@ class Cluster(base.QueryableModel):
         'alert_history': AlertHistory,
         'alert_notices': ClusterAlertNotice,
         'hosts': ClusterHost,
+        'host_components': HostComponent,
         'requests': Request,
         'services': ClusterService,
         'configurations': Configuration,
