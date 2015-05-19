@@ -423,9 +423,12 @@ class Model(object):
         they won't do an http request unless they have to.
         """
         if attr in self.relationships:
-            self.inflate()
+            rel_class = self.relationships[attr]
+            # we can't lazy-load DependentModel types
+            if issubclass(rel_class, DependentModel):
+                self.inflate()
+
             if attr not in self._relationship_cache:
-                rel_class = self.relationships[attr]
                 self._relationship_cache[attr] = rel_class.collection_class(
                     self.client, rel_class,
                     parent=self,
