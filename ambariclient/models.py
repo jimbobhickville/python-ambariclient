@@ -804,6 +804,12 @@ class Cluster(base.QueryableModel):
         # 'workflows': Workflow,
     }
 
+    def load(self, response):
+        # remove the old 'alerts' response that isn't the related Alert objects
+        if 'alerts' in response and isinstance(response['alerts'], dict):
+            del response['alerts']
+        return super(Cluster, self).load(response)
+
     def execute_action(self, action, context, parameters=None, hosts=None):
         """Execute a custom action on the cluster.
 
