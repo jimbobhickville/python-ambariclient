@@ -383,6 +383,9 @@ class ClusterServiceComponent(Component):
             if attr not in self._data:
                 self.inflate()
             return self._data.get(attr)
+        if attr == 'host_components':
+            # for some reason they come back as dependent models here
+            self.inflate()
         return super(ClusterServiceComponent, self).__getattr__(attr)
 
     def restart(self):
