@@ -707,17 +707,18 @@ class StackConfigurationList(Configuration):
     def __init__(self, *args, **kwargs):
         super(StackConfigurationList, self).__init__(*args, **kwargs)
         self.files = []
-        self.iter_marker = 0
+        self._iter_marker = 0
 
     def __iter__(self):
         self.inflate()
+        self._iter_marker = 0
         return self
 
     def next(self):
-        if self.iter_marker >= len(self.files):
+        if self._iter_marker >= len(self.files):
             raise StopIteration
-        model = self.files[self.iter_marker]
-        self.iter_marker += 1
+        model = self.files[self._iter_marker]
+        self._iter_marker += 1
         return model
 
     def load(self, response):

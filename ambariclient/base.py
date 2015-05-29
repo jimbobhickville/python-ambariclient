@@ -126,6 +126,7 @@ class ModelCollection(object):
 
     def __iter__(self):
         self.inflate()
+        self._iter_marker = 0
         return self
 
     def next(self):
