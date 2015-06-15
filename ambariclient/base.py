@@ -396,7 +396,11 @@ class Model(object):
     min_version = OLDEST_SUPPORTED_VERSION
 
     def __init__(self, parent, data=None):
-        self._data = data if data is not None else {}
+        if data is None:
+            data = {}
+
+        self._data = dict((key, value) for key, value in six.iteritems(data)
+                          if key in set(self.fields))
         self.parent = parent
         self.client = parent.client
         self._is_inflated = False

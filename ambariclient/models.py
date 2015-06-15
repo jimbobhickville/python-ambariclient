@@ -1049,3 +1049,18 @@ class AlertTarget(base.QueryableModel, base.GeneratedIdentifierMixin):
     data_key = 'AlertTarget'
     primary_key = 'id'
     fields = ('name', 'description', 'notification_type', 'global', 'properties', 'alert_states')
+
+    @events.evented
+    def create(self, validate=False, **kwargs):
+        """Create a new alert target.
+
+        :param validate: If `True`, test the target against the alerting backend before creating.
+            Will throw an exception if a test alert fails, e.g. the server is unable to connect to
+            the SMTP server for the `EMAIL` notification type.
+        :returns: A new instance of AlertTarget
+        """
+        if self.primary_key in kwargs:
+            del kwargs[self.primary_key]
+        data = self._generate_input_dict(**kwargs)
+        self.load(self.client.post(self.url, params={'validate_config': bool(validate)}, data=data))
+        return self
