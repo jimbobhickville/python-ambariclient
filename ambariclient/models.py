@@ -20,9 +20,10 @@ import os
 import time
 
 from ambariclient import base, exceptions, events
-from ambariclient.utils import normalize_underscore_case
+from ambariclient.utils import normalize_underscore_case, NullHandler
 
 LOG = logging.getLogger(__name__)
+LOG.addHandler(NullHandler())
 
 
 class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):

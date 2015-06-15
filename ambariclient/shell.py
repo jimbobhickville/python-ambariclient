@@ -25,6 +25,7 @@ from ambariclient import events, base, models, utils
 
 logging.basicConfig(level=logging.CRITICAL)
 LOG = logging.getLogger(__name__)
+LOG.addHandler(utils.NullHandler())
 
 
 def model_event(event, event_state, obj, **kwargs):

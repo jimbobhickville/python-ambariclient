@@ -23,6 +23,7 @@ import time
 from ambariclient import events, exceptions, utils
 
 LOG = logging.getLogger(__name__)
+LOG.addHandler(utils.NullHandler())
 
 OLDEST_SUPPORTED_VERSION = (1, 7, 0)
 
