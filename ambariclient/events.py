@@ -14,7 +14,10 @@ from collections import namedtuple
 import logging
 import inspect
 
+from ambariclient.utils import NullHandler
+
 LOG = logging.getLogger(__name__)
+LOG.addHandler(NullHandler())
 
 EVENT_HANDLERS = {}
 state_list = ['ANY', 'STARTED', 'FAILED', 'FINISHED', 'PROGRESS']

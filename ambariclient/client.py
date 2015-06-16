@@ -20,6 +20,7 @@ from ambariclient import models, utils, base, exceptions
 from ambariclient.exceptions import handle_response
 
 LOG = logging.getLogger(__name__)
+LOG.addHandler(utils.NullHandler())
 
 # this defines where the Ambari client delegates to for actual logic
 ENTRY_POINTS = {
