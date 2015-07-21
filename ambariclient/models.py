@@ -156,7 +156,7 @@ class Action(base.QueryableModel):
               'target_component', 'target_service', 'target_type')
 
 
-class Task(base.QueryableModel):
+class Task(base.PollableMixin, base.QueryableModel):
     path = 'tasks'
     data_key = 'Tasks'
     primary_key = 'id'
@@ -164,6 +164,14 @@ class Task(base.QueryableModel):
               'stderr', 'status', 'attempt_cnt', 'command', 'role', 'start_time',
               'stage_id', 'end_time', 'error_log', 'output_log', 'command_detail',
               'structured_out', 'custom_command_name')
+
+    @property
+    def has_failed(self):
+        return self.status not in ('PENDING', 'QUEUED', 'IN_PROGRESS', 'COMPLETED')
+
+    @property
+    def is_finished(self):
+        return self.status == 'COMPLETED'
 
 
 class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
@@ -181,11 +189,11 @@ class Request(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableM
 
     @property
     def has_failed(self):
-        return True if self.request_status in ('FAILED', 'ABORTED') else False
+        return self.request_status in ('FAILED', 'ABORTED')
 
     @property
     def is_finished(self):
-        return True if int(self.progress_percent) == 100 else False
+        return int(self.progress_percent) == 100
 
     def create(self, **kwargs):
         data = self._generate_input_dict(**kwargs)
@@ -786,6 +794,89 @@ class ClusterAlertNotice(base.QueryableModel):
               'target_id', 'target_name', 'uuid')
 
 
+class ClusterUpgradeItem(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'upgrade_items'
+    data_key = 'UpgradeItem'
+    primary_key = 'stage_id'
+    fields = ('stage_id', 'context', 'status', 'cluster_host_info', 'cluster_name',
+              'command_params', 'end_time', 'group_id', 'host_params', 'log_info',
+              'progress_percent', 'request_id', 'skippable', 'start_time', 'text')
+
+    relationships = {
+        'tasks': Task,
+    }
+
+    def execute(self):
+        return self.update(status='COMPLETED')
+
+    def abort(self):
+        return self.update(status='ABORTED')
+
+    def retry(self):
+        return self.update(status='PENDING')
+
+    def skip(self):
+        if not self.skippable:
+            raise exceptions.BadRequest("Upgrade Item is not skippable")
+
+        if self.status == 'HOLDING_TIMEDOUT':
+            return self.update(status='TIMEDOUT')
+
+        return self.update(status='FAILED')
+
+    @property
+    def has_failed(self):
+        return self.status not in ('PENDING', 'COMPLETED')
+
+    @property
+    def is_finished(self):
+        return True if int(self.progress_percent) == 100 else False
+
+
+class ClusterUpgradeItemGroup(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'upgrade_groups'
+    data_key = 'UpgradeGroup'
+    primary_key = 'group_id'
+    fields = ('group_id', 'title', 'progress_percent', 'completed_task_count', 'group_id',
+              'in_progress_task_count', 'name', 'request_id', 'status', 'total_task_count')
+
+    relationships = {
+        'items': ClusterUpgradeItem,
+    }
+
+    @property
+    def has_failed(self):
+        return self.status not in ('PENDING', 'COMPLETED')
+
+    @property
+    def is_finished(self):
+        return True if int(self.progress_percent) == 100 else False
+
+
+class ClusterUpgrade(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'upgrades'
+    data_key = 'Upgrade'
+    primary_key = 'request_id'
+    fields = ('request_id', 'cluster_name', 'create_time', 'direction', 'end_time', 'exclusive',
+              'from_version', 'to_version', 'progress_percent', 'request_context',
+              'request_status', 'start_time', 'type', 'repository_version')
+
+    relationships = {
+        'groups': ClusterUpgradeItemGroup,
+    }
+
+    @property
+    def has_failed(self):
+        return self.status not in ('PENDING', 'COMPLETED')
+
+    @property
+    def is_finished(self):
+        return True if int(self.progress_percent) == 100 else False
+
+
 class Cluster(base.QueryableModel):
     path = 'clusters'
     data_key = 'Clusters'
@@ -805,6 +896,7 @@ class Cluster(base.QueryableModel):
         'services': ClusterService,
         'configurations': Configuration,
         'privileges': UserPrivilege,
+        'upgrades': ClusterUpgrade,
         # the workflows API doesn't appear to do anything yet
         # 'workflows': Workflow,
     }
