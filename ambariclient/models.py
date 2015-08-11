@@ -834,7 +834,8 @@ class ClusterUpgradeItem(base.PollableMixin, base.GeneratedIdentifierMixin, base
         return True if int(self.progress_percent) == 100 else False
 
 
-class ClusterUpgradeItemGroup(base.PollableMixin, base.GeneratedIdentifierMixin, base.QueryableModel):
+class ClusterUpgradeItemGroup(base.PollableMixin, base.GeneratedIdentifierMixin,
+                              base.QueryableModel):
     min_version = (2,0,0)
     path = 'upgrade_groups'
     data_key = 'UpgradeGroup'
@@ -940,6 +941,7 @@ class Cluster(base.QueryableModel):
         :param hosts: Comma separated list of hosts to decommission
         :return: Current status of the request
         """
+
         components = {
             'YARN': {'slave': 'NODEMANAGER', 'master': 'RESOURCEMANAGER'},
             'HDFS': {'slave': 'DATANODE', 'master': 'NAMENODE'}
