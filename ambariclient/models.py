@@ -1027,6 +1027,21 @@ class StackService(base.QueryableModel):
         'configurations': StackConfiguration,
     }
 
+    def can(self, action):
+        """Determine whether or not this service can execute a specific custom action
+
+        Example:
+
+        if service.can('DECOMMISSION'):
+            cluster.decommission(service.service_name)
+        """
+        if action in self.custom_commands:
+            return True
+        for component in self.components(is_master=True):
+            if action in component.custom_commands:
+                return True
+        return False
+
 
 class Repository(base.QueryableModel):
     path = 'repositories'
