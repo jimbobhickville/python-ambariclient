@@ -420,12 +420,6 @@ class ClusterServiceComponent(Component):
         return self
 
 
-class HostAlert(base.DependentModel):
-    fields = ("description", "host_name", "last_status", "last_status_time",
-              "service_name", "status", "status_time", "output", "actual_status")
-    primary_key = None
-
-
 class Host(base.PollableMixin, base.QueryableModel):
     path = 'hosts'
     data_key = 'Hosts'
@@ -568,21 +562,29 @@ class ClusterHosts(base.QueryableModelCollection):
             host.wait()
 
 
+class ClusterAlert(base.QueryableModel):
+    min_version = (2,0,0)
+    path = 'alerts'
+    data_key = 'Alert'
+    primary_key = 'id'
+    fields = ('id', 'cluster_name', 'component_name', 'definition_id', 'definition_name',
+              'host_name', 'instance', 'label', 'latest_timestamp', 'maintenance_state',
+              'original_timestamp', 'scope', 'service_name', 'state', 'text')
+
+
 class ClusterHost(Host):
     collection_class = ClusterHosts
 
     relationships = {
         'alert_history': AlertHistory,
-        'alerts': HostAlert,
+        'alerts': ClusterAlert,
         'components': HostComponent,
     }
 
     def load(self, response):
-        if 'alerts' in response:
-            if 'detail' in response['alerts']:
-                response['alerts'] = response['alerts']['detail']
-            else:
-                del response['alerts']
+        # remove the old 'alerts' response that isn't the related Alert objects
+        if 'alerts' in response and isinstance(response['alerts'], dict):
+            del response['alerts']
         return super(ClusterHost, self).load(response)
 
     def create(self, *args, **kwargs):
@@ -654,6 +656,7 @@ class Service(base.QueryableModel):
 class ClusterService(Service):
     relationships = {
         'alert_history': AlertHistory,
+        'alerts': ClusterAlert,
         'components': ClusterServiceComponent,
     }
 
@@ -711,16 +714,6 @@ class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
     primary_key = 'privilege_id'
     fields = ('privilege_id', 'permission_name', 'principal_name',
               'principal_type', 'type', 'user_name', 'cluster_name')
-
-
-class ClusterAlert(base.QueryableModel):
-    min_version = (2,0,0)
-    path = 'alerts'
-    data_key = 'Alert'
-    primary_key = 'id'
-    fields = ('id', 'cluster_name', 'component_name', 'definition_id', 'definition_name',
-              'host_name', 'instance', 'label', 'latest_timestamp', 'maintenance_state',
-              'original_timestamp', 'scope', 'service_name', 'state', 'text')
 
 
 class ClusterAlertDefinition(base.QueryableModel):
