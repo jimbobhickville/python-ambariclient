@@ -13,7 +13,7 @@
 import re
 
 try:
-    from logging import NullHandler
+    from logging import NullHandler  # pylint: disable=unused-import
 except ImportError:
     from logging import Handler
 
