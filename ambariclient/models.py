@@ -705,51 +705,6 @@ class Configuration(base.QueryableModel):
         return super(Configuration, self).load(response)
 
 
-class StackConfiguration(Configuration):
-    data_key = 'StackConfigurations'
-    fields = ('property_name', 'service_name', 'stack_name', 'stack_version',
-              'final', 'property_description', 'property_type', 'property_value',
-              'type')
-
-
-class StackConfigurationList(Configuration):
-    def __init__(self, *args, **kwargs):
-        super(StackConfigurationList, self).__init__(*args, **kwargs)
-        self.files = []
-        self._iter_marker = 0
-
-    def __iter__(self):
-        self.inflate()
-        self._iter_marker = 0
-        return self
-
-    def next(self):
-        if self._iter_marker >= len(self.files):
-            raise StopIteration
-        model = self.files[self._iter_marker]
-        self._iter_marker += 1
-        return model
-
-    def load(self, response):
-        models = []
-        # we either get a single item or a list of items.  WTF Ambari devs?
-        if isinstance(response, list):
-            for item in response:
-                model = StackConfiguration(self.parent)
-                model.load(item)
-                models.append(model)
-        else:
-            model = StackConfiguration(self.parent)
-            model.load(response)
-            models.append(model)
-
-        self.files = models
-
-    def to_dict(self):
-        self.inflate()
-        return { 'files': [x.to_dict() for x in self.files] }
-
-
 class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
     path = 'privileges'
     data_key = 'PrivilegeInfo'
@@ -1005,6 +960,53 @@ class StackServiceComponent(Component):
               'display_name', 'is_client', 'is_master')
 
 
+class StackConfigurationProperty(base.QueryableModel):
+    path = 'configurations'
+    data_key = 'StackConfigurations'
+    primary_key = 'property_name'
+    fields = ('property_name', 'service_name', 'stack_name', 'stack_version',
+              'final', 'property_description', 'property_type', 'property_value',
+              'type')
+
+
+class StackConfiguration(base.QueryableModel):
+    path = 'configurations'
+
+    def __init__(self, *args, **kwargs):
+        super(StackConfiguration, self).__init__(*args, **kwargs)
+        self._properties = []
+        self._iter_marker = 0
+
+    def __iter__(self):
+        self.inflate()
+        self._iter_marker = 0
+        return self
+
+    def next(self):
+        if self._iter_marker >= len(self._properties):
+            raise StopIteration
+        model = self._properties[self._iter_marker]
+        self._iter_marker += 1
+        return model
+
+    def load(self, response):
+        self._properties = []
+        # we either get a single item or a list of items.  WTF Ambari devs?
+        if isinstance(response, list):
+            for item in response:
+                model = StackConfigurationProperty(self.parent)
+                model.load(item)
+                self._properties.append(model)
+        else:
+            model = StackConfigurationProperty(self.parent)
+            model.load(response)
+            self._properties.append(model)
+
+    def to_dict(self):
+        self.inflate()
+        return { 'files': [x.to_dict() for x in self._properties] }
+
+
 class StackService(base.QueryableModel):
     path = 'services'
     data_key = 'StackServices'
@@ -1015,7 +1017,7 @@ class StackService(base.QueryableModel):
               'config_types')
     relationships = {
         'components': StackServiceComponent,
-        'configurations': StackConfigurationList,
+        'configurations': StackConfiguration,
     }
 
 
