@@ -905,7 +905,8 @@ class Cluster(base.QueryableModel):
 
         components = {
             'YARN': {'slave': 'NODEMANAGER', 'master': 'RESOURCEMANAGER'},
-            'HDFS': {'slave': 'DATANODE', 'master': 'NAMENODE'}
+            'HDFS': {'slave': 'DATANODE', 'master': 'NAMENODE'},
+            'HBASE': {'slave': 'HBASE_REGIONSERVER', 'master': 'HBASE_MASTER'},
         }
         if service not in components:
             raise ValueError("{0} is not a valid service to decommission".format(service))
