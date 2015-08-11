@@ -857,6 +857,12 @@ class Cluster(base.QueryableModel):
         # 'workflows': Workflow,
     }
 
+    @property
+    def stack(self):
+        """Finds the stack object that was used in the blueprint for this cluster"""
+        (stack_name, stack_version) = self.version.split('-')
+        return self.client.stacks(stack_name).versions(stack_version)
+
     def load(self, response):
         # remove the old 'alerts' response that isn't the related Alert objects
         if 'alerts' in response and isinstance(response['alerts'], dict):
