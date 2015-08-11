@@ -38,10 +38,10 @@ def test_lazy_loading():
         assert http_request.call_count == 0, "getting model inflated collection"
 
         cluster.hosts
-        assert http_request.call_count == 1, "accessing relationship on model didn't inflate it"
+        assert http_request.call_count == 0, "accessing relationship on model inflated it"
 
         cluster.hosts.to_dict()
-        assert http_request.call_count == 2, "to_dict on relationship didn't inflate it"
+        assert http_request.call_count == 1, "to_dict on relationship didn't inflate it"
 
     with patch(patch_method, MagicMock(return_value={})) as http_request:
         client = Ambari('localhost')
