@@ -703,8 +703,8 @@ class Configuration(base.QueryableModel):
     def load(self, response):
         # sigh, this API does not follow the pattern at all
         for field in self.fields:
-            if field in response and field not in response['Config']:
-                response['Config'][field] = response.pop(field)
+            if field in response and field not in response[self.data_key]:
+                response[self.data_key][field] = response.pop(field)
         return super(Configuration, self).load(response)
 
 
@@ -1111,6 +1111,75 @@ class ViewPermission(base.QueryableModel):
               'resource_name')
 
 
+class ViewPrivilegeCollection(base.QueryableModelCollection):
+    def create(self, *args, **kwargs):
+        """This collection requires you to PUT the entire collection every time you add to it"""
+
+        fields = ('principal_type', 'principal_name', 'permission_name')
+        def uniquify(model):
+            """
+            We don't want to create duplicate privileges, but we can't rely on the id for
+            uniqueness because it doesn't exist for new entries yet
+            """
+            return ':'.join([getattr(model, field) for field in fields])
+
+        new_privileges = {}
+        model = self.model_class(self, data=kwargs)
+        new_privileges[uniquify(model)] = {
+            model.data_key: {field: getattr(model, field) for field in fields}
+        }
+
+        self.inflate()
+        for model in self._models:
+            # add in any existing ones that weren't in the "new" ones
+            key = uniquify(model)
+            if key not in new_privileges:
+                new_privileges[key] = {
+                    model.data_key: {field: getattr(model, field) for field in fields}
+                }
+
+        self.client.put(self.url, json=json.dumps(list(new_privileges.values())))
+        return self.refresh()
+
+    def delete(self):
+        self.client.put(self.url, data=[])
+        return self.refresh()
+
+
+class ViewPrivilege(UserPrivilege):
+    collection_class = ViewPrivilegeCollection
+    fields = ('privilege_id', 'instance_name', 'view_name', 'version', 'permission_name',
+              'principal_name', 'principal_type')
+
+    def inflate(self):
+        if self.primary_key not in self._data:
+            return
+        return super(ViewPrivilege, self).inflate()
+
+
+class ViewResource(base.QueryableModel):
+    data_key = 'ViewResource'
+    path = 'resources'
+    fields = ('name', 'instance_name', 'version', 'view_name')
+    primary_key = 'name'
+
+    def load(self, response):
+        # sigh, this API does not follow the pattern at all
+        # when you get a single instance, it returns a list of properties
+        if isinstance(response, list):
+            self._data['properties'] = response
+            return
+
+        # but when you get a collection, it has the other fields at the top-level of each dict
+        if self.data_key not in response:
+            response[self.data_key] = {}
+        for field in self.fields:
+            if field in response and field not in response[self.data_key]:
+                response[self.data_key][field] = response.pop(field)
+
+        return super(ViewResource, self).load(response)
+
+
 class ViewInstance(base.QueryableModel):
     path = 'instances'
     data_key = 'ViewInstanceInfo'
@@ -1118,7 +1187,11 @@ class ViewInstance(base.QueryableModel):
     fields = ('instance_name', 'context_path', 'description', 'icon64_path',
               'icon_path', 'label', 'static', 'version', 'view_name', 'visible',
               'instance_data', 'properties')
-    # privileges and resources relationships exist, but no idea how they're defined
+
+    relationships = {
+        'privileges': ViewPrivilege,
+        'resources': ViewResource,
+    }
 
 
 class ViewVersion(base.QueryableModel):
