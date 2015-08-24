@@ -1186,7 +1186,7 @@ class ViewInstance(base.QueryableModel):
     primary_key = 'instance_name'
     fields = ('instance_name', 'context_path', 'description', 'icon64_path',
               'icon_path', 'label', 'static', 'version', 'view_name', 'visible',
-              'instance_data', 'properties')
+              'instance_data', 'properties', 'cluster_handle')
 
     relationships = {
         'privileges': ViewPrivilege,
