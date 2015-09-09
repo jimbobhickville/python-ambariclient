@@ -696,6 +696,7 @@ class ClusterService(Service):
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
+    use_key_prefix = False
     data_key = 'Config'
     primary_key = 'type'
     fields = ('cluster_name', 'tag', 'type', 'version', 'properties')
@@ -1116,6 +1117,7 @@ class ViewPrivilegeCollection(base.QueryableModelCollection):
         """This collection requires you to PUT the entire collection every time you add to it"""
 
         fields = ('principal_type', 'principal_name', 'permission_name')
+
         def uniquify(model):
             """
             We don't want to create duplicate privileges, but we can't rely on the id for
