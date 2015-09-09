@@ -1127,8 +1127,11 @@ class ViewPrivilegeCollection(base.QueryableModelCollection):
 
         new_privileges = {}
         model = self.model_class(self, data=kwargs)
+        data_key = {}
+        for field in fields:
+            data_key[field] = getattr(model, field)
         new_privileges[uniquify(model)] = {
-            model.data_key: {field: getattr(model, field) for field in fields}
+            model.data_key: data_key
         }
 
         self.inflate()
@@ -1137,7 +1140,7 @@ class ViewPrivilegeCollection(base.QueryableModelCollection):
             key = uniquify(model)
             if key not in new_privileges:
                 new_privileges[key] = {
-                    model.data_key: {field: getattr(model, field) for field in fields}
+                    model.data_key: data_key
                 }
 
         self.client.put(self.url, json=json.dumps(list(new_privileges.values())))
