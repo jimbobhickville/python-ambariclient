@@ -348,23 +348,22 @@ class HostComponent(Component):
 
     def restart(self):
         """Restarts this component on its host, if already installed and started."""
-        if self.state in ('STARTED', 'STOPPED', 'UNKNOWN', 'INSTALLED'):
-            self.load(self.client.post(self.cluster.requests.url, data={
-                "RequestInfo": {
-                    "command": "RESTART",
-                    "context": "Restart %s" % normalize_underscore_case(self.component_name),
-                    "operation_level": {
-                        "level": "SERVICE",
-                        "cluster_name": self.cluster_name,
-                        "service_name": self.service_name,
-                    },
-                },
-                "Requests/resource_filters": [{
+        self.load(self.client.post(self.cluster.requests.url, data={
+            "RequestInfo": {
+                "command": "RESTART",
+                "context": "Restart %s" % normalize_underscore_case(self.component_name),
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
                     "service_name": self.service_name,
-                    "component_name": self.component_name,
-                    "hosts": self.host_name,
-                }],
-            }))
+                },
+            },
+            "Requests/resource_filters": [{
+                "service_name": self.service_name,
+                "component_name": self.component_name,
+                "hosts": self.host_name,
+            }],
+        }))
         return self
 
 
