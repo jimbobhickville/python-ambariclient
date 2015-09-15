@@ -217,7 +217,8 @@ class QueryableModelCollection(ModelCollection):
         if kwargs:
             prefix = self.model_class.data_key
             for (key, value) in kwargs.iteritems():
-                key = '/'.join([prefix, key])
+                if self.model_class.use_key_prefix:
+                    key = '/'.join([prefix, key])
                 if not isinstance(value, six.string_types):
                     value = json.dumps(value)
                 self._filter[key] = value
@@ -564,6 +565,7 @@ class QueryableModel(Model):
     """
 
     collection_class = QueryableModelCollection
+    use_key_prefix = True
     path = None
     data_key = None
     relationships = {}
