@@ -1,3 +1,2 @@
-IPython
 requests>=1.2.1
 six
