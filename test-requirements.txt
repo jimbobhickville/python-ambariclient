@@ -4,3 +4,4 @@ pytest-pep8>=1.0.6
 pytest-cov>=1.8.1
 mock>=1.0.1
 pylint
+tox

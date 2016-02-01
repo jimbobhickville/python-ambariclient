@@ -18,7 +18,6 @@ import os
 import six
 import sys
 import traceback
-from IPython.terminal.embed import InteractiveShellEmbed
 
 from ambariclient.client import Ambari, ENTRY_POINTS
 from ambariclient import events, base, models, utils
@@ -138,6 +137,17 @@ def log(level):
 
 
 if os.environ.get('PYTHONSTARTUP', '') == __file__:
+    # Invoke IPython shell
+    try:
+        from IPython.terminal.embed import InteractiveShellEmbed
+    except ImportError:
+        six.print_('''
+Error: IPython is not installed. Try running:
+
+    pip install IPython
+''', file=sys.stderr)
+        sys.exit(1)
+
     for event_name in ['create', 'update', 'delete']:
         for state in [events.states.STARTED, events.states.FINISHED]:
             callback = functools.partial(model_event, event_name, state)
@@ -165,7 +175,7 @@ if os.environ.get('PYTHONSTARTUP', '') == __file__:
         version = ambari.version
     except Exception:  # pylint: disable=broad-except
         traceback.print_exc()
-        six.print_("\nCould not connect to Ambari server - aborting!")
+        six.print_("\nCould not connect to Ambari server - aborting!", file=sys.stderr)
         sys.exit(1)
 
     shell_help = "\n".join([
