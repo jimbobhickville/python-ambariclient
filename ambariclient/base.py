@@ -138,6 +138,9 @@ class ModelCollection(object):
         self._iter_marker += 1
         return model
 
+    def __next__(self):
+        return self.next()
+
     def __call__(self, *args):
         raise NotImplementedError("'__call__' must be defined by subclasses")
 
