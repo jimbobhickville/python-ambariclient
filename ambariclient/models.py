@@ -692,20 +692,70 @@ class ClusterService(Service):
             }))
         return self
 
+    def start(self, component_names=None):
+        """Starts this service."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.START.%s" % self.service_name,
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
+                    "service_name": self.service_name,
+                }
+            },
+            "Body": {
+                "ServiceInfo": {"state": "STARTED"},
+            },
+        }))
+        return self
+
+    def stop(self, component_names=None):
+        """Stops this service."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.START.%s" % self.service_name,
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
+                    "service_name": self.service_name,
+                }
+            },
+            "Body": {
+                "ServiceInfo": {"state": "INSTALLED"},
+            },
+        }))
+        return self
+
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
     use_key_prefix = False
-    data_key = 'Config'
     primary_key = 'type'
     fields = ('cluster_name', 'tag', 'type', 'version', 'properties')
+    query_fields = ('tag', 'type')
 
-    def load(self, response):
-        # sigh, this API does not follow the pattern at all
-        for field in self.fields:
-            if field in response and field not in response[self.data_key]:
-                response[self.data_key][field] = response.pop(field)
-        return super(Configuration, self).load(response)
+    @property
+    def url(self):
+        """ Configurations tags and types are specified using query parameters
+        But only for loads ...
+        """
+        if self._href is not None:
+            return self._href
+
+        url=self.parent.url()
+        if self.query_fields in self:
+            url+='?'
+            for idx, query_field in enumerate(self.query_fields):
+                if idx > 0: url += '&'
+                url+= "%s=%s" % (query_field, self[query_field])
+            return url
+        raise exceptions.ClientError("Not able to determine object URL")
+
+    def create(self, **kwargs):
+        """Create a new instance of this resource type."""
+        data = self._generate_input_dict(**kwargs)
+        self.load(self.client.post(self.url, data=data))
+        return self
 
 
 class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
