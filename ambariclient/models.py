@@ -886,13 +886,24 @@ class Cluster(base.QueryableModel):
         }))
         return self.request
 
-    def decommission(self, service, hosts):
-        """Decommission slave components on a cluster.
+    def decommmission(self, service, hosts):
+        self.commission(service, hosts, "decommission")
+
+    def recommission(self, service, hosts):
+        self.commission(service, hosts, "recommission")
+        """Nodemanager recommission does not start nodemanager process on the host. so its required to do it separately"""
+        if service is "NODEMANAGER":
+            for host in hosts:
+                self.hosts(host).components("NODEMANAGER").start()
+
+    def commmission(self, service, hosts, commmission_type):
+        """Decommission/Recommission slave components on a cluster.
 
         This should make it safe to remove these hosts from the cluster.
 
         :param service: The name of the service that the components are for
-        :param hosts: Comma separated list of hosts to decommission
+        :param hosts: Comma separated list of hosts to decommission/recommission
+        :param commmission_type: type of commission decommission or recommission
         :return: Current status of the request
         """
 
@@ -901,13 +912,21 @@ class Cluster(base.QueryableModel):
             'HDFS': {'slave': 'DATANODE', 'master': 'NAMENODE'},
             'HBASE': {'slave': 'HBASE_REGIONSERVER', 'master': 'HBASE_MASTER'},
         }
+
+        desired_admin_state = {
+            "decommission" : "DECOMMISSIONED",
+            "recommission" : "LIVE"
+        }
+
+        include_or_exclude_hosts = "excluded_hosts" if commmission_type == "decommission" else "included_hosts"
+
         if service not in components:
-            raise ValueError("{0} is not a valid service to decommission".format(service))
+            raise ValueError("{0} is not a valid service to {1}".format(service, commmission_type))
 
         slave = components[service]['slave']
         # filter off hosts where the slave component is already decommissioned
         hosts = [host for host in hosts
-                 if self.hosts(host).components(slave).desired_admin_state != 'DECOMMISSIONED']
+                 if self.hosts(host).components(slave).desired_admin_state != desired_admin_state['decommission']]
         if len(hosts) == 0:
             # no action required, all hosts are already decommissioned
             return self
@@ -926,7 +945,7 @@ class Cluster(base.QueryableModel):
             "RequestInfo": {
                 "command": "DECOMMISSION",
                 "context": "Decommission {0}".format(normalize_underscore_case(slave)),
-                "parameters": {"slave_type": slave, "excluded_hosts": ','.join(hosts)},
+                "parameters": {"slave_type": slave, include_or_exclude_hosts: ','.join(hosts)},
                 "operation_level": operation_level,
             },
             "Requests/resource_filters": [{
