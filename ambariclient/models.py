@@ -886,24 +886,24 @@ class Cluster(base.QueryableModel):
         }))
         return self.request
 
-    def decommmission(self, service, hosts):
+    def decommission(self, service, hosts):
         self.commission(service, hosts, "decommission")
 
     def recommission(self, service, hosts):
         self.commission(service, hosts, "recommission")
         """Nodemanager recommission does not start nodemanager process on the host. so its required to do it separately"""
-        if service is "NODEMANAGER":
+        if service is "YARN":
             for host in hosts:
                 self.hosts(host).components("NODEMANAGER").start()
 
-    def commmission(self, service, hosts, commmission_type):
+    def commission(self, service, hosts, commission_type):
         """Decommission/Recommission slave components on a cluster.
 
         This should make it safe to remove these hosts from the cluster.
 
         :param service: The name of the service that the components are for
         :param hosts: Comma separated list of hosts to decommission/recommission
-        :param commmission_type: type of commission decommission or recommission
+        :param commission_type: type of commission decommission or recommission
         :return: Current status of the request
         """
 
@@ -918,15 +918,15 @@ class Cluster(base.QueryableModel):
             "recommission" : "LIVE"
         }
 
-        include_or_exclude_hosts = "excluded_hosts" if commmission_type == "decommission" else "included_hosts"
+        include_or_exclude_hosts = "excluded_hosts" if commission_type == "decommission" else "included_hosts"
 
         if service not in components:
-            raise ValueError("{0} is not a valid service to {1}".format(service, commmission_type))
+            raise ValueError("{0} is not a valid service to {1}".format(service, commission_type))
 
         slave = components[service]['slave']
         # filter off hosts where the slave component is already decommissioned
         hosts = [host for host in hosts
-                 if self.hosts(host).components(slave).desired_admin_state != desired_admin_state['decommission']]
+                 if self.hosts(host).components(slave).desired_admin_state != desired_admin_state[commission_type]]
         if len(hosts) == 0:
             # no action required, all hosts are already decommissioned
             return self
