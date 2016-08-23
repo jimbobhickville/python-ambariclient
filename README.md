@@ -357,6 +357,7 @@ in the ambari-shell.  We'll try to keep it up-to-date:
 - `ambari.services(service_name)`
 - `ambari.services(service_name).components`
 - `ambari.services(service_name).components(component_name)`
+- `ambari.services(service_name).components(component_name).host_components`
 - `ambari.stacks`
 - `ambari.stacks(stack_name)`
 - `ambari.stacks(stack_name).versions`
