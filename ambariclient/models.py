@@ -1232,13 +1232,6 @@ class RootServiceComponent(Component):
         'host_components': RootServiceHostComponents,
     }
 
-class RootServiceComponent(Component):
-    path = 'components'
-    data_key = 'RootServiceComponents'
-    relationships = {
-        'host_components': RootServiceHostComponents,
-    }
-
 class RootService(Service):
     data_key = 'RootService'
     fields = ('service_name')
