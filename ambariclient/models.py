@@ -1219,10 +1219,18 @@ class View(base.QueryableModel):
         'versions': ViewVersion,
     }
 
+class RootServiceHostComponents(Component):
+    collection_class = HostComponentCollection
+    path = 'hostComponents'
+    data_key = 'RootServiceHostComponents'
+    fields = ('component_name', 'host_name', 'service_name')
 
 class RootServiceComponent(Component):
+    path = 'components'
     data_key = 'RootServiceComponents'
-
+    relationships = {
+        'host_components': RootServiceHostComponents,
+    }
 
 class RootService(Service):
     data_key = 'RootService'
