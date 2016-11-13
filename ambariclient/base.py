@@ -17,6 +17,7 @@ Defines all the base classes for response objects.
 from datetime import datetime, timedelta
 import json
 import logging
+import re
 import six
 import time
 
@@ -26,6 +27,8 @@ LOG = logging.getLogger(__name__)
 LOG.addHandler(utils.NullHandler())
 
 OLDEST_SUPPORTED_VERSION = (1, 7, 0)
+
+URLPARTS = re.compile(r'(https?://.*?)(/.*)')
 
 
 class PollableMixin(object):
@@ -591,6 +594,12 @@ class QueryableModel(Model):
         model's identifier.
         """
         if self._href is not None:
+            if self.parent.url:
+              parent_url_parts = URLPARTS.match(self.parent.url)
+              my_url_parts = URLPARTS.match(self._href)
+              if parent_url_parts and my_url_parts:
+                if parent_url_parts.group(1) != my_url_parts.group(1):
+                  return parent_url_parts.group(1) + my_url_parts.group(2)
             return self._href
         if self.identifier:
             return '/'.join([self.parent.url, self.identifier])
