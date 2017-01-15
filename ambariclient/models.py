@@ -917,7 +917,6 @@ class Cluster(base.QueryableModel):
             for host in hosts:
                 self.hosts(host).components("NODEMANAGER").start()
 
-
     def commission(self, service, hosts, commission_type):
         """Decommission/Recommission slave components on a cluster.
 
