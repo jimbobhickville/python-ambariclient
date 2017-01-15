@@ -238,13 +238,16 @@ class HostComponentCollection(base.QueryableModelCollection):
 
         return server_components
 
-    def install(self):
+    def install(self, context=None):
         """Install all of the components associated with this host."""
         components = [x.component_name for x in self if x.state in ('INIT', 'UNINSTALLED')]
+        if not context:
+            context = "Install All Host Components"
+
         if components:
             self.load(self.client.put(self.url, data={
                 "RequestInfo": {
-                    "context": "Install All Host Components",
+                    "context": context,
                     "operation_level": {
                         "level": "HOST",
                         "cluster_name": self.parent.cluster_name,
@@ -258,15 +261,18 @@ class HostComponentCollection(base.QueryableModelCollection):
             }))
         return self
 
-    def start(self):
+    def start(self, context=None):
         """Start all of the components associated with this host."""
         components = [x.component_name
                       for x in self._server_components
                       if x.state in ('INSTALLED', 'STOPPED')]
+        if not context:
+            context = "Start All Host Components"
+
         if components:
             self.load(self.client.put(self.url, data={
                 "RequestInfo": {
-                    "context": "Start All Host Components",
+                    "context": context,
                     "operation_level": {
                         "level": "HOST",
                         "cluster_name": self.parent.cluster_name,
@@ -280,13 +286,16 @@ class HostComponentCollection(base.QueryableModelCollection):
             }))
         return self
 
-    def stop(self):
+    def stop(self, context=None):
         """Stop all of the components associated with this host."""
         components = [x.component_name for x in self._server_components if x.state == 'STARTED']
+        if not context:
+            context = "Stop All Host Components"
+
         if components:
             self.load(self.client.put(self.url, data={
                 "RequestInfo": {
-                    "context": "Stop All Host Components",
+                    "context": context,
                     "operation_level": {
                         "level": "HOST",
                         "cluster_name": self.parent.cluster_name,
@@ -310,11 +319,14 @@ class HostComponent(Component):
               'stack_id', 'stale_configs', 'state', 'actual_configs',
               'desired_admin_state')
 
-    def install(self):
+    def install(self, context=None):
+        if not context:
+            context = "Install %s" % normalize_underscore_case(self.component_name)
+
         """Installs this component on the host in question."""
         self.load(self.client.put(self.url, data={
             "RequestInfo": {
-                "context": "Install %s" % normalize_underscore_case(self.component_name),
+                "context": context,
             },
             "HostRoles": {
                 "state": "INSTALLED",
@@ -322,11 +334,14 @@ class HostComponent(Component):
         }))
         return self
 
-    def start(self):
+    def start(self, context=None):
+        if not context:
+            context = "Start %s" % normalize_underscore_case(self.component_name)
+
         """Starts this component on its host, if already installed."""
         self.load(self.client.put(self.url, data={
             "RequestInfo": {
-                "context": "Start %s" % normalize_underscore_case(self.component_name),
+                "context": context,
             },
             "HostRoles": {
                 "state": "STARTED",
@@ -334,11 +349,14 @@ class HostComponent(Component):
         }))
         return self
 
-    def stop(self):
+    def stop(self, context=None):
+        if not context:
+            context = "Stop %s" % normalize_underscore_case(self.component_name)
+
         """Starts this component on its host, if already installed and started."""
         self.load(self.client.put(self.url, data={
             "RequestInfo": {
-                "context": "Stop %s" % normalize_underscore_case(self.component_name),
+                "context": context,
             },
             "HostRoles": {
                 "state": "INSTALLED",
@@ -346,12 +364,15 @@ class HostComponent(Component):
         }))
         return self
 
-    def restart(self):
+    def restart(self, context=None):
+        if not context:
+            context = "Restart %s" % normalize_underscore_case(self.component_name)
+
         """Restarts this component on its host, if already installed and started."""
         self.load(self.client.post(self.cluster.requests.url, data={
             "RequestInfo": {
                 "command": "RESTART",
-                "context": "Restart %s" % normalize_underscore_case(self.component_name),
+                "context": context,
                 "operation_level": {
                     "level": "SERVICE",
                     "cluster_name": self.cluster_name,
