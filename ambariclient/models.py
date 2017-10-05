@@ -907,6 +907,21 @@ class Cluster(base.QueryableModel):
         }))
         return self.request
 
+    def start(self):
+        """Start all services on a cluster."""
+        url = self.cluster.services.url + "/?ServiceInfo/state=INSTALLED"
+        self.load(self.client.put(url, data={
+            "RequestInfo": {
+                "context": "Start All Services"
+            },
+            "Body": {
+                "ServiceInfo": {
+                    "state": "STARTED"
+                }
+            }
+        }))
+        return self.request
+
     def decommission(self, service, hosts):
         self.commission(service, hosts, "decommission")
 
