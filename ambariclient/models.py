@@ -226,6 +226,13 @@ class Component(base.QueryableModel):
         return { 'name': self.component_name }
 
 
+class ClusterServiceComponentCollection(base.QueryableModelCollection):
+    def get_client_config_tar(self):
+        """Returns tarfile.Tarfile instance."""
+        url = self.url + "?format=client_config_tar"
+        return self.client.get(url)
+
+
 class HostComponentCollection(base.QueryableModelCollection):
     @property
     def _server_components(self):
@@ -389,6 +396,7 @@ class HostComponent(Component):
 
 
 class ClusterServiceComponent(Component):
+    collection_class = ClusterServiceComponentCollection
     fields = ['cluster_name', 'component_name', 'service_name', 'category',
               'installed_count', 'started_count', 'total_count']
     extra_fields = {
