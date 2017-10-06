@@ -12,8 +12,11 @@
 
 import copy
 import functools
+import io
 import json
 import logging
+import tarfile
+
 import requests
 
 from ambariclient import models, utils, base, exceptions
@@ -158,7 +161,11 @@ class HttpClient(object):
         # there is no consistent way to determine response type
         # so assume json if it's not an empty string
         if len(response.text) > 0:
-            if response.headers.get('content-type') != 'application/json':
+            if response.headers.get('content-type') == 'application/x-ustar':
+                tarstream = io.BytesIO(response.content)
+                tarstream.seek(0)
+                return tarfile.open(fileobj=tarstream)
+            elif response.headers.get('content-type') != 'application/json':
                 # Log bad methods so we can report them
                 LOG.debug("Wrong response content-type for %s %s: %s", method,
                           url, response.headers.get('content-type'))
