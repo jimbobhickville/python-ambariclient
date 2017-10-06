@@ -738,6 +738,18 @@ class ClusterService(Service):
             }))
         return self
 
+    def start(self):
+        """Starts this service, if already installed."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "Start %s" % normalize_underscore_case(self.service_name),
+            },
+            "ServiceInfo": {
+                "state": "STARTED",
+            },
+        }))
+        return self
+
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
