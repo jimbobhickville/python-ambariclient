@@ -673,7 +673,24 @@ class Service(base.QueryableModel):
     fields = ('service_name', 'cluster_name', 'maintenance_state', 'state')
 
 
+class ClusterServiceCollection(base.QueryableModelCollection):
+    def start(self):
+        """Start all services on a cluster."""
+        url = self.url + "/?ServiceInfo/state=INSTALLED"
+        self.load(self.client.put(url, data={
+            "RequestInfo": {
+                "context": "Start All Services"
+            },
+            "Body": {
+                "ServiceInfo": {
+                    "state": "STARTED"
+                }
+            }
+        }))
+        return self.request
+
 class ClusterService(Service):
+    collection_class = ClusterServiceCollection
     relationships = {
         'alert_history': AlertHistory,
         'alerts': ClusterAlert,
