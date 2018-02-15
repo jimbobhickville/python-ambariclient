@@ -742,6 +742,40 @@ class ClusterService(Service):
             }))
         return self
 
+    def start(self, component_names=None):
+        """Starts this service."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.START.%s" % self.service_name,
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
+                    "service_name": self.service_name,
+                }
+            },
+            "Body": {
+                "ServiceInfo": {"state": "STARTED"},
+            },
+        }))
+        return self
+
+    def stop(self, component_names=None):
+        """Stops this service."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.STOP.%s" % self.service_name,
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
+                    "service_name": self.service_name,
+                }
+            },
+            "Body": {
+                "ServiceInfo": {"state": "INSTALLED"},
+            },
+        }))
+        return self
+
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
