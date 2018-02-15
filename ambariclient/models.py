@@ -684,10 +684,13 @@ class Service(base.QueryableModel):
 class ClusterServiceCollection(base.QueryableModelCollection):
     def start(self):
         """Start all services on a cluster."""
-        url = self.url + "/?ServiceInfo/state=INSTALLED"
-        self.load(self.client.put(url, data={
+        self.load(self.client.put(self.url, data={
             "RequestInfo": {
-                "context": "Start All Services"
+                "context": "_PARSE_.START.ALL_SERVICES",
+                "operation_level": {
+                    "level": "CLUSTER",
+                    "cluster_name": self.parent.cluster_name
+                }
             },
             "Body": {
                 "ServiceInfo": {
@@ -696,6 +699,7 @@ class ClusterServiceCollection(base.QueryableModelCollection):
             }
         }))
         return self.request
+
 
 class ClusterService(Service):
     collection_class = ClusterServiceCollection
