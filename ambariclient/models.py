@@ -1258,6 +1258,14 @@ class OperatingSystem(base.QueryableModel):
     }
 
 
+class RepositoryVersion(base.QueryableModel):
+    path = 'repository_versions'
+    data_key = 'RepositoryVersions'
+    primary_key = 'id'
+    fields = ('display_name', 'has_children', 'hidden', 'id', 'parent_id', 'repository_version', 'resolved',
+              'services', 'stack_name', 'stack_services', 'stack_version', 'type', 'release')
+
+
 class Version(base.QueryableModel):
     path = 'versions'
     data_key = 'Versions'
@@ -1265,6 +1273,7 @@ class Version(base.QueryableModel):
     fields = ('stack_name', 'stack_version', 'active', 'min_upgrade_version',
               'parent_stack_version', 'config_types')
     relationships = {
+        'repository_versions': RepositoryVersion,
         'operating_systems': OperatingSystem,
         'services': StackService,
     }
