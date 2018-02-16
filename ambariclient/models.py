@@ -17,6 +17,8 @@ Defines all the model classes for the various parts of the API.
 import logging
 import json
 import os
+import random
+import string
 import time
 
 from ambariclient import base, exceptions, events
@@ -777,12 +779,82 @@ class ClusterService(Service):
         return self
 
 
+class ConfigurationItemCollection(base.QueryableModelCollection):
+    @property
+    def url(self):
+        return self.parent.url
+
+    def create(self, tag=None, **kwargs):
+        """This collection requires you to PUT the entire collection every time you add to it"""
+        # support for create(properties='{"hadoop.proxyuser.xyz.groups" : "*"}')
+        # a PUT to "http://localhost:8080/api/v1/clusters/cluster"
+        # in format as: [{"Clusters":{"desired_config":[{"type":"core-site", "tag":"somrandchars",
+        #                                                "properties":{"hadoop.proxyuser.xyz.groups" : "*", ... }]}}]
+        new_item = {'Clusters': {'desired_config':
+                                 [{'type': self.parent.type,
+                                   'tag': (tag if tag
+                                           else ''.join(random.choice(string.ascii_letters) for _ in range(10)))
+                                   }]}}
+        previous_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
+        self.inflate()
+        previous_tag_item = None
+        for model in self._models:
+            if model.tag == previous_tag:
+                previous_tag_item = (model.items[0] if (model.items and len(model.items) > 0) else None)
+                break
+
+        def uniquify(previous_tag_item, key, value):
+            attrib_value = None
+            if previous_tag_item:
+                attrib_value = (previous_tag_item[key] if key in previous_tag_item else None)
+            new_value = value
+            try:
+                new_value = json.loads(value)
+            except:
+                pass
+            if attrib_value:
+                if isinstance(new_value, dict):
+                    attrib_value.update(new_value)
+                elif isinstance(new_value, list):
+                    attrib_value.extend(new_value)
+                else:
+                    attrib_value = new_value
+            else:
+                attrib_value = new_value
+            return attrib_value
+
+        if previous_tag_item:
+            for key, value in previous_tag_item.items():
+                if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
+                    new_item['Clusters']['desired_config'][0][key] = value
+        for key, value in kwargs.items():
+            if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
+                new_item['Clusters']['desired_config'][0][key] = uniquify(previous_tag_item, key, value)
+
+        self.client.put(self.parent.cluster.url, json=json.dumps(new_item))
+        return self.refresh()
+
+
+class ConfigurationItem(base.QueryableModel):
+    primary_key = 'tag'
+    collection_class = ConfigurationItemCollection
+    fields = ('tag', 'version', 'items')
+
+    @property
+    def url(self):
+        url = '{}&tag={}'.format(self.parent.url, self._data['tag'])
+        return url
+
+
 class Configuration(base.QueryableModel):
     path = 'configurations'
     use_key_prefix = False
     data_key = 'Config'
     primary_key = 'type'
     fields = ('cluster_name', 'tag', 'type', 'version', 'properties')
+    relationships = {
+        'items': ConfigurationItem
+    }
 
     def load(self, response):
         # sigh, this API does not follow the pattern at all
@@ -790,6 +862,11 @@ class Configuration(base.QueryableModel):
             if field in response and field not in response[self.data_key]:
                 response[self.data_key][field] = response.pop(field)
         return super(Configuration, self).load(response)
+
+    @property
+    def url(self):
+        url = '{}?type={}'.format(self.parent.url, self._data['type'])
+        return url
 
 
 class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
