@@ -36,7 +36,7 @@ Note that the shell functionality requires that you install IPython:
 $ pip install IPython
 ```
 
-Here is an 
+Here is an
 
 ```
 $ ambari-shell
@@ -65,10 +65,10 @@ Ambari client available as 'ambari'
 In [1]:
 ```
 
-You can then just reference the `ambari` variable as the client.  The client is configurable via 
-command-line options and/or a config file.  The defaults are those for the Ambari Quick Start 
-setup.  Username and password are defaulted to `admin`, and the host is defaulted to 
-`http://c6401.ambari.apache.org:8080` 
+You can then just reference the `ambari` variable as the client.  The client is configurable via
+command-line options and/or a config file.  The defaults are those for the Ambari Quick Start
+setup.  Username and password are defaulted to `admin`, and the host is defaulted to
+`http://c6401.ambari.apache.org:8080`
 
 You can override them by creating a JSON configuration file in `$HOME/.ambari`:
 
@@ -366,6 +366,8 @@ in the ambari-shell.  We'll try to keep it up-to-date:
 - `ambari.stacks(stack_name).versions(stack_version).operating_systems(os_type)`
 - `ambari.stacks(stack_name).versions(stack_version).operating_systems(os_type).repositories`
 - `ambari.stacks(stack_name).versions(stack_version).operating_systems(os_type).repositories(repo_id)`
+- `ambari.stacks(stack_name).versions(stack_version).repository_versions`
+- `ambari.stacks(stack_name).versions(stack_version).repository_versions(id)`
 - `ambari.stacks(stack_name).versions(stack_version).services`
 - `ambari.stacks(stack_name).versions(stack_version).services(service_name)`
 - `ambari.stacks(stack_name).versions(stack_version).services(service_name).components`
