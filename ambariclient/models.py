@@ -790,11 +790,8 @@ class ConfigurationItemCollection(base.QueryableModelCollection):
         # a PUT to "http://localhost:8080/api/v1/clusters/cluster"
         # in format as: [{"Clusters":{"desired_config":[{"type":"core-site", "tag":"somrandchars",
         #                                                "properties":{"hadoop.proxyuser.xyz.groups" : "*", ... }]}}]
-        new_item = {'Clusters': {'desired_config':
-                                 [{'type': self.parent.type,
-                                   'tag': (tag if tag
-                                           else ''.join(random.choice(string.ascii_letters) for _ in range(10)))
-                                   }]}}
+        new_tag = (tag if tag else ''.join(random.choice(string.ascii_letters) for _ in range(10)))
+        new_item = {'Clusters': {'desired_config': [{'type': self.parent.type, 'tag': new_tag }]}}
         previous_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
         self.inflate()
         previous_tag_item = None
@@ -1115,6 +1112,20 @@ class Cluster(base.QueryableModel):
             }],
         }))
         return self
+
+    def restart_stale_config_components(self, context=None):
+        """Restart all required components resulting from stale configs"""
+        self.load(self.client.post(self.cluster.requests.url, data={
+            "RequestInfo": {
+                "context": (context if context else "Restart All Required"),
+                "operation_level": "host_component",
+                "command": "RESTART"
+            },
+            "Requests/resource_filters": [{
+                "hosts_predicate": "HostRoles/stale_configs=true"
+            }],
+        }))
+        return self.request
 
 
 class BlueprintHostGroup(base.DependentModel):
