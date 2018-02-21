@@ -17,8 +17,6 @@ Defines all the model classes for the various parts of the API.
 import logging
 import json
 import os
-import random
-import string
 import time
 
 from ambariclient import base, exceptions, events
@@ -790,7 +788,7 @@ class ConfigurationItemCollection(base.QueryableModelCollection):
         # a PUT to "http://localhost:8080/api/v1/clusters/cluster"
         # in format as: [{"Clusters":{"desired_config":[{"type":"core-site", "tag":"somrandchars",
         #                                                "properties":{"hadoop.proxyuser.xyz.groups" : "*", ... }]}}]
-        new_tag = (tag if tag else ''.join(random.choice(string.ascii_letters) for _ in range(10)))
+        new_tag = (tag if tag else str(time.time()))
         new_item = {'Clusters': {'desired_config': [{'type': self.parent.type, 'tag': new_tag }]}}
         previous_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
         self.inflate()
@@ -804,20 +802,15 @@ class ConfigurationItemCollection(base.QueryableModelCollection):
             attrib_value = None
             if previous_tag_item:
                 attrib_value = (previous_tag_item[key] if key in previous_tag_item else None)
-            new_value = value
-            try:
-                new_value = json.loads(value)
-            except:
-                pass
             if attrib_value:
-                if isinstance(new_value, dict):
-                    attrib_value.update(new_value)
-                elif isinstance(new_value, list):
-                    attrib_value.extend(new_value)
+                if isinstance(value, dict):
+                    attrib_value.update(value)
+                elif isinstance(value, list):
+                    attrib_value.extend(value)
                 else:
-                    attrib_value = new_value
+                    attrib_value = value
             else:
-                attrib_value = new_value
+                attrib_value = value
             return attrib_value
 
         if previous_tag_item:
