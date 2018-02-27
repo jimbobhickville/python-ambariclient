@@ -700,6 +700,24 @@ class ClusterServiceCollection(base.QueryableModelCollection):
         }))
         return self.request
 
+    def stop(self):
+        """Stop all services on a cluster."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.STOP.ALL_SERVICES",
+                "operation_level": {
+                    "level": "CLUSTER",
+                    "cluster_name": self.parent.cluster_name
+                }
+            },
+            "Body": {
+                "ServiceInfo": {
+                    "state": "INSTALLED"
+                }
+            }
+        }))
+        return self.request
+
 
 class ClusterService(Service):
     collection_class = ClusterServiceCollection
@@ -1225,7 +1243,7 @@ class Repository(base.QueryableModel):
     data_key = 'Repositories'
     primary_key = 'repo_id'
     fields = ('repo_id', 'repo_name', 'os_type', 'stack_name', 'stack_version',
-              'base_url', 'default_base_url', 'latest_base_url', 'mirrors_list')
+              'base_url', 'default_base_url', 'latest_base_url', 'mirrors_list', 'verify_base_url')
 
 
 class OperatingSystem(base.QueryableModel):
