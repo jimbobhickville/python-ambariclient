@@ -97,3 +97,20 @@ def generate_base_url(host, protocol=None, port=None):
         'port': str(derived_port),
     }
     return "{protocol}://{host}:{port}".format(**url_params)
+
+
+def update_or_new_value(item, key, value):
+    """Update a dict (`item`) if its `key` exists. Type of `value` is checked before its updated
+    and returned. If the `key` does not exist, then return the `value` as is.
+    """
+    attrib_value = item.get(key) if item else None
+    if attrib_value:
+        if isinstance(value, dict):
+            attrib_value.update(value)
+        elif isinstance(value, list):
+            attrib_value.extend(value)
+        else:
+            attrib_value = value
+    else:
+        attrib_value = value
+    return attrib_value

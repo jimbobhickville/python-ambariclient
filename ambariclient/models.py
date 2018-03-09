@@ -20,7 +20,7 @@ import os
 import time
 
 from ambariclient import base, exceptions, events
-from ambariclient.utils import normalize_underscore_case, NullHandler
+from ambariclient.utils import normalize_underscore_case, NullHandler, update_or_new_value
 
 LOG = logging.getLogger(__name__)
 LOG.addHandler(NullHandler())
@@ -801,43 +801,39 @@ class ConfigurationItemCollection(base.QueryableModelCollection):
         return self.parent.url
 
     def create(self, tag=None, **kwargs):
-        """This collection requires you to PUT the entire collection every time you add to it"""
+        """Update or create Cluster configuration. This requires you to PUT the entire collection
+        every time you add or update a configuration item.
+
+        Args:
+            tag (:obj:`str`, optional): Configuration tag to use.
+                Default: timestamp
+            **kwargs: Configuration items to update or create for Cluster configuration.
+
+        Returns:
+            A :obj:`ConfigurationItemCollection` self
+        """
         # support for create(properties='{"hadoop.proxyuser.xyz.groups" : "*"}')
         # a PUT to "http://localhost:8080/api/v1/clusters/cluster"
         # in format as: [{"Clusters":{"desired_config":[{"type":"core-site", "tag":"somrandchars",
         #                                                "properties":{"hadoop.proxyuser.xyz.groups" : "*", ... }]}}]
-        new_tag = (tag if tag else str(time.time()))
+        new_tag = tag or str(time.time())
         new_item = {'Clusters': {'desired_config': [{'type': self.parent.type, 'tag': new_tag }]}}
         previous_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
         self.inflate()
-        previous_tag_item = None
+        tag_item = None
         for model in self._models:
             if model.tag == previous_tag:
-                previous_tag_item = (model.items[0] if (model.items and len(model.items) > 0) else None)
+                tag_item = (model.items[0] if (model.items and len(model.items) > 0) else None)
                 break
 
-        def uniquify(previous_tag_item, key, value):
-            attrib_value = None
-            if previous_tag_item:
-                attrib_value = (previous_tag_item[key] if key in previous_tag_item else None)
-            if attrib_value:
-                if isinstance(value, dict):
-                    attrib_value.update(value)
-                elif isinstance(value, list):
-                    attrib_value.extend(value)
-                else:
-                    attrib_value = value
-            else:
-                attrib_value = value
-            return attrib_value
-
-        if previous_tag_item:
-            for key, value in previous_tag_item.items():
+        if tag_item:
+            for key, value in tag_item.items():
                 if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
                     new_item['Clusters']['desired_config'][0][key] = value
         for key, value in kwargs.items():
             if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
-                new_item['Clusters']['desired_config'][0][key] = uniquify(previous_tag_item, key, value)
+                new_item['Clusters']['desired_config'][0][key] = update_or_new_value(tag_item,
+                                                                                     key, value)
 
         self.client.put(self.parent.cluster.url, json=json.dumps(new_item))
         return self.refresh()
@@ -1128,7 +1124,7 @@ class Cluster(base.QueryableModel):
         """Restart all required components resulting from stale configs"""
         self.load(self.client.post(self.cluster.requests.url, data={
             "RequestInfo": {
-                "context": (context if context else "Restart All Required"),
+                "context": (context or 'Restart All Required'),
                 "operation_level": "host_component",
                 "command": "RESTART"
             },
