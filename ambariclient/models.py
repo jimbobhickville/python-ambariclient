@@ -684,10 +684,13 @@ class Service(base.QueryableModel):
 class ClusterServiceCollection(base.QueryableModelCollection):
     def start(self):
         """Start all services on a cluster."""
-        url = self.url + "/?ServiceInfo/state=INSTALLED"
-        self.load(self.client.put(url, data={
+        self.load(self.client.put(self.url, data={
             "RequestInfo": {
-                "context": "Start All Services"
+                "context": "_PARSE_.START.ALL_SERVICES",
+                "operation_level": {
+                    "level": "CLUSTER",
+                    "cluster_name": self.parent.cluster_name
+                }
             },
             "Body": {
                 "ServiceInfo": {
@@ -696,6 +699,25 @@ class ClusterServiceCollection(base.QueryableModelCollection):
             }
         }))
         return self.request
+
+    def stop(self):
+        """Stop all services on a cluster."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.STOP.ALL_SERVICES",
+                "operation_level": {
+                    "level": "CLUSTER",
+                    "cluster_name": self.parent.cluster_name
+                }
+            },
+            "Body": {
+                "ServiceInfo": {
+                    "state": "INSTALLED"
+                }
+            }
+        }))
+        return self.request
+
 
 class ClusterService(Service):
     collection_class = ClusterServiceCollection
@@ -738,6 +760,101 @@ class ClusterService(Service):
             }))
         return self
 
+    def start(self, component_names=None):
+        """Starts this service."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.START.%s" % self.service_name,
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
+                    "service_name": self.service_name,
+                }
+            },
+            "Body": {
+                "ServiceInfo": {"state": "STARTED"},
+            },
+        }))
+        return self
+
+    def stop(self, component_names=None):
+        """Stops this service."""
+        self.load(self.client.put(self.url, data={
+            "RequestInfo": {
+                "context": "_PARSE_.STOP.%s" % self.service_name,
+                "operation_level": {
+                    "level": "SERVICE",
+                    "cluster_name": self.cluster_name,
+                    "service_name": self.service_name,
+                }
+            },
+            "Body": {
+                "ServiceInfo": {"state": "INSTALLED"},
+            },
+        }))
+        return self
+
+
+class ConfigurationItemCollection(base.QueryableModelCollection):
+    @property
+    def url(self):
+        return self.parent.url
+
+    def create(self, tag=None, properties_to_update=None, **kwargs):
+        """Update properties or create new Cluster configuration.
+
+        Args:
+            tag (:obj:`str`, optional): Configuration tag to use.
+                Default: timestamp
+            properties_to_update (:obj:`dict`, optional): Configuration properties to update. Keyword argument
+                `properties` is ignored if this is provided. Default: ``None``
+            **kwargs: Configuration items to set.
+
+        Returns:
+            A :obj:`ConfigurationItemCollection` self
+        """
+        # support for create(properties_to_update='{"hadoop.proxyuser.xyz.groups" : "*"}')
+        # a PUT to "http://localhost:8080/api/v1/clusters/cluster"
+        # in format as: [{"Clusters":{"desired_config":[{"type":"core-site", "tag":"somrandchars",
+        #                                                "properties":{"hadoop.proxyuser.xyz.groups" : "*", ... }]}}]
+        new_tag = tag or str(time.time())
+        new_item = {'Clusters': {'desired_config': [{'type': self.parent.type, 'tag': new_tag}]}}
+
+        if properties_to_update:
+            current_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
+            self.inflate()
+            current_item = {}
+            for model in self._models:
+                if model.tag == current_tag:
+                    current_item = (model.items[0] if (model.items and len(model.items) > 0) else None)
+                    break
+
+            for key, value in current_item.items():
+                if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
+                    new_item['Clusters']['desired_config'][0][key] = value
+
+            if 'properties' in new_item['Clusters']['desired_config'][0]:
+                new_item['Clusters']['desired_config'][0]['properties'].update(properties_to_update)
+            else:
+                new_item['Clusters']['desired_config'][0]['properties'] = properties_to_update
+            kwargs.pop('properties', None)
+
+        new_item['Clusters']['desired_config'][0].update(kwargs)
+        self.client.put(self.parent.cluster.url, json=json.dumps(new_item))
+
+        return self.refresh()
+
+
+class ConfigurationItem(base.QueryableModel):
+    primary_key = 'tag'
+    collection_class = ConfigurationItemCollection
+    fields = ('tag', 'version', 'items')
+
+    @property
+    def url(self):
+        url = '{}&tag={}'.format(self.parent.url, self._data['tag'])
+        return url
+
 
 class Configuration(base.QueryableModel):
     path = 'configurations'
@@ -745,6 +862,9 @@ class Configuration(base.QueryableModel):
     data_key = 'Config'
     primary_key = 'type'
     fields = ('cluster_name', 'tag', 'type', 'version', 'properties')
+    relationships = {
+        'items': ConfigurationItem
+    }
 
     def load(self, response):
         # sigh, this API does not follow the pattern at all
@@ -752,6 +872,11 @@ class Configuration(base.QueryableModel):
             if field in response and field not in response[self.data_key]:
                 response[self.data_key][field] = response.pop(field)
         return super(Configuration, self).load(response)
+
+    @property
+    def url(self):
+        url = '{}?type={}'.format(self.parent.url, self._data['type'])
+        return url
 
 
 class UserPrivilege(base.GeneratedIdentifierMixin, base.QueryableModel):
@@ -1001,6 +1126,20 @@ class Cluster(base.QueryableModel):
         }))
         return self
 
+    def restart_stale_config_components(self, context=None):
+        """Restart all required components resulting from stale configs"""
+        self.load(self.client.post(self.cluster.requests.url, data={
+            "RequestInfo": {
+                "context": (context or 'Restart All Required'),
+                "operation_level": "host_component",
+                "command": "RESTART"
+            },
+            "Requests/resource_filters": [{
+                "hosts_predicate": "HostRoles/stale_configs=true"
+            }],
+        }))
+        return self.request
+
 
 class BlueprintHostGroup(base.DependentModel):
     fields = ('name', 'configurations', 'components', 'cardinality')
@@ -1106,7 +1245,7 @@ class Repository(base.QueryableModel):
     data_key = 'Repositories'
     primary_key = 'repo_id'
     fields = ('repo_id', 'repo_name', 'os_type', 'stack_name', 'stack_version',
-              'base_url', 'default_base_url', 'latest_base_url', 'mirrors_list')
+              'base_url', 'default_base_url', 'latest_base_url', 'mirrors_list', 'verify_base_url')
 
 
 class OperatingSystem(base.QueryableModel):
