@@ -20,7 +20,7 @@ import os
 import time
 
 from ambariclient import base, exceptions, events
-from ambariclient.utils import normalize_underscore_case, NullHandler, update_or_new_value
+from ambariclient.utils import normalize_underscore_case, NullHandler
 
 LOG = logging.getLogger(__name__)
 LOG.addHandler(NullHandler())
@@ -800,42 +800,48 @@ class ConfigurationItemCollection(base.QueryableModelCollection):
     def url(self):
         return self.parent.url
 
-    def create(self, tag=None, **kwargs):
-        """Update or create Cluster configuration. This requires you to PUT the entire collection
-        every time you add or update a configuration item.
+    def create(self, tag=None, properties_to_update=None, **kwargs):
+        """Update properties or create new Cluster configuration.
 
         Args:
             tag (:obj:`str`, optional): Configuration tag to use.
                 Default: timestamp
-            **kwargs: Configuration items to update or create for Cluster configuration.
+            properties_to_update (:obj:`dict`, optional): Configuration properties to update. Keyword argument
+                `properties` is ignored if this is provided. Default: ``None``
+            **kwargs: Configuration items to set.
 
         Returns:
             A :obj:`ConfigurationItemCollection` self
         """
-        # support for create(properties='{"hadoop.proxyuser.xyz.groups" : "*"}')
+        # support for create(properties_to_update='{"hadoop.proxyuser.xyz.groups" : "*"}')
         # a PUT to "http://localhost:8080/api/v1/clusters/cluster"
         # in format as: [{"Clusters":{"desired_config":[{"type":"core-site", "tag":"somrandchars",
         #                                                "properties":{"hadoop.proxyuser.xyz.groups" : "*", ... }]}}]
         new_tag = tag or str(time.time())
-        new_item = {'Clusters': {'desired_config': [{'type': self.parent.type, 'tag': new_tag }]}}
-        previous_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
-        self.inflate()
-        tag_item = None
-        for model in self._models:
-            if model.tag == previous_tag:
-                tag_item = (model.items[0] if (model.items and len(model.items) > 0) else None)
-                break
+        new_item = {'Clusters': {'desired_config': [{'type': self.parent.type, 'tag': new_tag}]}}
 
-        if tag_item:
-            for key, value in tag_item.items():
+        if properties_to_update:
+            current_tag = self.parent.cluster.desired_configs[self.parent.type]['tag']
+            self.inflate()
+            current_item = {}
+            for model in self._models:
+                if model.tag == current_tag:
+                    current_item = (model.items[0] if (model.items and len(model.items) > 0) else None)
+                    break
+
+            for key, value in current_item.items():
                 if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
                     new_item['Clusters']['desired_config'][0][key] = value
-        for key, value in kwargs.items():
-            if key.upper() not in ('VERSION', 'CONFIG', 'TYPE', 'TAG', 'HREF'):
-                new_item['Clusters']['desired_config'][0][key] = update_or_new_value(tag_item,
-                                                                                     key, value)
 
+            if 'properties' in new_item['Clusters']['desired_config'][0]:
+                new_item['Clusters']['desired_config'][0]['properties'].update(properties_to_update)
+            else:
+                new_item['Clusters']['desired_config'][0]['properties'] = properties_to_update
+            kwargs.pop('properties', None)
+
+        new_item['Clusters']['desired_config'][0].update(kwargs)
         self.client.put(self.parent.cluster.url, json=json.dumps(new_item))
+
         return self.refresh()
 
 
