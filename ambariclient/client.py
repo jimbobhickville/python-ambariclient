@@ -161,11 +161,11 @@ class HttpClient(object):
         # there is no consistent way to determine response type
         # so assume json if it's not an empty string
         if len(response.text) > 0:
-            if response.headers.get('content-type') == 'application/x-ustar':
+            if 'application/x-ustar' in response.headers.get('content-type'):
                 tarstream = io.BytesIO(response.content)
                 tarstream.seek(0)
                 return tarfile.open(fileobj=tarstream)
-            elif response.headers.get('content-type') != 'application/json':
+            elif 'application/json' not in response.headers.get('content-type'):
                 # Log bad methods so we can report them
                 LOG.debug("Wrong response content-type for %s %s: %s", method,
                           url, response.headers.get('content-type'))
