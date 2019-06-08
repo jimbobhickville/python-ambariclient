@@ -364,6 +364,11 @@ class HostComponent(Component):
         self.load(self.client.put(self.url, data={
             "RequestInfo": {
                 "context": context,
+                "operation_level": {
+                        "level": "HOST_COMPONENT",
+                        "cluster_name": self.cluster_name,
+                        "host_name": self.host_name,
+                    }
             },
             "HostRoles": {
                 "state": "INSTALLED",
