@@ -67,6 +67,8 @@ def publish(obj, event, event_state, **kwargs):
     for cls in potential:
         event_key = '.'.join([cls, event, event_state])
         backup_key = '.'.join([cls, event, states.ANY])
+        # LOG.debug("event_key: " + str(event_key))
+        # LOG.debug("backup_key: " + str(backup_key))
         if event_key in EVENT_HANDLERS:
             callbacks = EVENT_HANDLERS[event_key]
             break

@@ -75,7 +75,7 @@ class Ambari(object):
         self._version = None
 
     def __dir__(self):
-        return self.__dict__.keys() + ENTRY_POINTS.keys()
+        return list(self.__dict__.keys()) + list(ENTRY_POINTS.keys())
 
     def check_version(self):
         if self.version < base.OLDEST_SUPPORTED_VERSION:

@@ -113,10 +113,36 @@ class Bootstrap(base.PollableMixin, base.GeneratedIdentifierMixin, base.Queryabl
         to ensure they are fully online before returning, because that's all a
         user should care about.
         """
+        # This is hacky.. the addition of the host_up_timeout was the cleanest way I could think of.
+        # It should be backwards compatible.
         super(Bootstrap, self).wait(**kwargs)
+
         # make sure all the hosts are registered as well
         for host in self.hosts:
             host.wait()
+        return self
+    
+    def wait_vCrap(self, **kwargs):
+        """Wait until the bootstrap completes and all hosts are registered.
+
+        Even after bootstrap finishes, there is a slight delay while the agents
+        start and register themselves with Ambari.  We add in additional checks
+        to ensure they are fully online before returning, because that's all a
+        user should care about.
+        """
+        # This is hacky.. the addition of the host_up_timeout was the cleanest way I could think of.
+        # It should be backwards compatible.
+        if "host_up_timeout" in kwargs:
+            per_host_kwargs = {"timeout": kwargs["host_up_timeout"]}
+            del(kwargs["host_up_timeout"])
+        else:
+            per_host_kwargs = {}
+
+        super(Bootstrap, self).wait(**kwargs)
+
+        # make sure all the hosts are registered as well
+        for host in self.hosts:
+            host.wait(**per_host_kwargs)
         return self
 
     def inflate(self):
@@ -465,7 +491,7 @@ class Host(base.PollableMixin, base.QueryableModel):
               'desired_configs')
 
     default_interval = 5
-    default_timeout = 180
+    default_timeout = 1200
 
     @property
     def has_failed(self):
@@ -1063,7 +1089,7 @@ class Cluster(base.QueryableModel):
         return self.request
 
     def decommission(self, service, hosts):
-        self.commission(service, hosts, "decommission")
+        return self.commission(service, hosts, "decommission")
 
     def recommission(self, service, hosts):
         self.commission(service, hosts, "recommission")
