@@ -19,8 +19,8 @@ with open(requirements_path) as requirements_file:
     requires = requirements_file.readlines()
 
 setuptools.setup(
-    name="python-ambariclient",
-    version="0.6.0",
+    name="apixio-ambariclient",
+    version="0.6.0.5",
     author="Rackspace",
     author_email="greg.hill@rackspace.com",
     description="Client library for Apache Ambari.",

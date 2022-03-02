@@ -311,6 +311,7 @@ in the ambari-shell.  We'll try to keep it up-to-date:
 - `ambari.clusters(cluster_name).alerts(id)`
 - `ambari.clusters(cluster_name).configurations`
 - `ambari.clusters(cluster_name).configurations(type)`
+- `ambari.clusters(cluster_name).decommission(hosts=[], service="YARN")`
 - `ambari.clusters(cluster_name).host_components`
 - `ambari.clusters(cluster_name).host_components(component_name)`
 - `ambari.clusters(cluster_name).hosts`
